@@ -104,7 +104,9 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, output_stride):
         self.inplanes = 64
         super(ResNet, self).__init__()
-        if output_stride == 16:
+        if output_stride == 32:
+            strides = [2, 2, 2, 1]
+        elif output_stride == 16:
             strides = [1, 2, 2, 1]
         elif output_stride == 8:
             strides = [1, 2, 1, 1]          
@@ -162,7 +164,7 @@ class ResNet(nn.Module):
         return layer1_feat, layer2_feat, layer3_feat, x
 
 
-def resnet101(output_stride=16, pretrained=True, **kwargs):
+def resnet101(output_stride=32, pretrained=True, **kwargs):
     """Constructs a ResNet-101 model.
 
     Args:

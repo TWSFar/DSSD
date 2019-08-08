@@ -22,7 +22,9 @@ class head(nn.Module):
         for (x, l, c) in zip(input, self.loc_layers, self.conf_layers):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
-
+        
+        loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1) 
+        conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
         return loc, conf 
 
 def build_head(inplances=[256, 256, 256, 256], 
@@ -33,10 +35,11 @@ def build_head(inplances=[256, 256, 256, 256],
 
 if __name__ == "__main__":
     input = []
-    input += [torch.rand(2, 256, 32, 32)]
-    input += [torch.rand(2, 256, 32, 32)]
     input += [torch.rand(2, 256, 64, 64)]
-    input += [torch.rand(2, 256, 128, 128)]
+    input += [torch.rand(2, 256, 32, 32)]
+    input += [torch.rand(2, 256, 16, 16)]
+    input += [torch.rand(2, 256, 16, 16)]
+
     model = build_head()
     output = model(input)
     print(output)

@@ -69,25 +69,25 @@ class Decoder(nn.Module):
 
     def forward(self, layer1_feat, layer2_feat, layer3_feat, layer4_feat):
         x = layer4_feat
-        dssdlayer1 = self.last_conv1(x)
+        dssdlayer4 = self.last_conv4(x)
 
         y = self.layer3(layer3_feat)
         if x.size()[2:] != y.size()[2:]:
             x = F.interpolate(x, size=y.size()[2:], mode='bilinear', align_corners=True)
         x += y
-        dssdlayer2 = self.last_conv2(x)
+        dssdlayer3 = self.last_conv3(x)
         
         y = self.layer2(layer2_feat)
         if x.size()[2:] != y.size()[2:]:
             x = F.interpolate(x, size=y.size()[2:], mode='bilinear', align_corners=True)
         x += y
-        dssdlayer3 = self.last_conv3(x)
+        dssdlayer2 = self.last_conv2(x)
         
         y = self.layer1(layer1_feat)
         if x.size()[2:] != y.size()[2:]:
             x = F.interpolate(x, size=y.size()[2:], mode='bilinear', align_corners=True)
         x += y
-        dssdlayer4 = self.last_conv4(x)
+        dssdlayer1 = self.last_conv1(x)
 
         return dssdlayer1, dssdlayer2, dssdlayer3, dssdlayer4
 
@@ -104,9 +104,9 @@ def build_decoder(backbone):
 
 if __name__ == "__main__":
     model = build_decoder('resnet')
-    layer4_feat = torch.rand((2, 256, 32, 32))
-    layer3_feat = torch.rand((2, 1024, 32, 32))
-    layer2_feat = torch.rand((2, 512, 64, 64))
-    layer1_feat = torch.rand((2, 256, 128, 128))
+    layer4_feat = torch.rand((2, 256, 16, 16))
+    layer3_feat = torch.rand((2, 1024, 16, 16))
+    layer2_feat = torch.rand((2, 512, 32, 32))
+    layer1_feat = torch.rand((2, 256, 64, 64))
     output = model(layer1_feat, layer2_feat, layer3_feat, layer4_feat)
     pass

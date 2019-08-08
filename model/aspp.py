@@ -33,7 +33,9 @@ class ASPP(nn.Module):
     def __init__(self, backbone, output_stide):
         super(ASPP, self).__init__()
         inplanes = 2048
-        if output_stide == 16:
+        if output_stide == 32:
+            dilations = [1, 3, 6, 9]
+        elif output_stide == 16:
             dilations = [1, 6, 12, 18]
         elif output_stide == 8:
             dilations = [1, 12, 24, 26]
@@ -77,13 +79,13 @@ class ASPP(nn.Module):
                 m.bias.data.zero_()
 
     
-def build_aspp(backbone='resnet', output_stide=16):
+def build_aspp(backbone='resnet', output_stide=32):
     return ASPP(backbone, output_stide)
 
 
 if __name__ == "__main__":
-    model = build_aspp('resnet', 16)
-    input = torch.rand(2, 2048, 32, 32) # when batch = 1, batchnorm is error
+    model = build_aspp('resnet', 32)
+    input = torch.rand(2, 2048, 16, 16) # when batch = 1, batchnorm is error
     model.train()
     output = model(input)
     pass
