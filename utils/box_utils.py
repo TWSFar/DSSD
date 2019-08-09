@@ -73,7 +73,7 @@ def jaccard(box_a, box_b):
     return inter / union
 
 
-def match(threshold, truths, label, priors, variances, loct_t, conf_t, idx):
+def match(threshold, truths, labels, priors, variances, loc_t, conf_t, idx):
     """
     Match each prior box with the ground truth box of the highest jaccard
     overlap, encode the bounding boxes, then return the matched indices
@@ -96,4 +96,83 @@ def match(threshold, truths, label, priors, variances, loct_t, conf_t, idx):
         truths,
         xywh_2_xyxy(priors)
     )
+    # (Bipartite Matching)
+    # [1, num_objects] best prior for each ground truth
+    best_prior_overlap, best_prior_idx = overlaps.max(1, keepdim=True)
+    # [1, num_pirors] best ground truth for each prior
+    best_truth_overlap, best_truth_idx = overlaps.max(0, keepdim=True)
+    best_truth_idx.squeeze_(0)
+    best_truth_overlap.squeeze_(0)
+    best_prior_idx.squeeze_(1)
+    best_prior_overlap.squeeze_(1)
+    best_truth_overlap.index_fill_(0, best_prior_idx, 2)  # ensure best prior
+    # TODO refactor: index best_prior_idx with long tensor
+    # ensure every gt matches with its prior of max overlap
+    for j in range(best_prior_idx.size(0)):
+        best_truth_idx[best_prior_idx[j]] = j
+    matches = truths[best_truth_idx]
+    conf = labels[best_truth_idx]
+    conf[best_truth_overlap < threshold] = 0
+    loc = encode(matches, priors, variances)
+    loc_t[idx] = loc
+    conf_t[idx] = conf
 
+
+def encode(matched, priors, variances):
+    """
+    Encode the variances from the priorbox layers into the ground truth boxes
+    we have matched (based on jaccard overlap) with the prior boxes.
+    Args:
+        matched: (tensor) Coords of ground truth for each prior in point-form
+            Shape: [num_priors, 4].
+        priors: (tensor) Prior boxes in center-offset form
+            Shape: [num_priors,4].
+        variances: (list[float]) Variances of priorboxes
+    Return:
+        encoded boxes (tensor), Shape: [num_priors, 4]
+    """
+
+    # dist b/t match center and prior's center
+    g_cxcy = (matched[:, :2] + matched[:, 2:]) / 2 - priors[:, :2]
+    # encode variance
+    g_cxcy /= (variances[0] * priors[:, 2:])
+    # match wh / prior wh
+    g_wh = (matched[:, 2:] - matched[:, :2]) / priors[:, 2:]
+    g_wh = torch.log(g_wh) / variances[1]
+    # return target for smooth_l1_loss
+    return torch.cat([g_cxcy, g_wh], 1) # [num_priors, 4]
+
+
+def decode(loc, priors, variances):
+    """
+    Decode locations from predictions using priors to undo
+    the encoding we did for offset regression at train time.
+    Args:
+        loc (tensor): location predictions for loc layers,
+            Shape: [num_priors,4]
+        priors (tensor): Prior boxes in center-offset form.
+            Shape: [num_priors,4].
+        variances: (list[float]) Variances of priorboxes
+    Return:
+        decoded bounding box predictions
+    """
+
+    boxes = torch.cat((
+        priors[:, :2] + loc[:, :2] * variances[0] * priors[:, 2:],
+        priors[:, 2:] * torch.exp(loc[:, 2:] * variances[1])), 1)
+    boxes[:, :2] -= boxes[:, 2:] / 2
+    boxes[:, 2:] += boxes[:, :2]
+
+    return boxes  # xyxy
+
+
+def log_sum_exp(x):
+    """
+    Utility function for computing log_sum_exp while determining
+    This will be used to determine unaveraged confidence loss across
+    all examples in a batch.
+    Args:
+        x (Variable(tensor)): conf_preds from conf layers
+    """
+    x_max = x.data.max()
+    return torch.log(torch.sum(torch.exp(x-x_max), 1, keepdim=True)) + x_max
