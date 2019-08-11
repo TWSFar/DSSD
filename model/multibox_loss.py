@@ -75,4 +75,13 @@ class MultiBoxLoss(nn.Module):
         # Confidence Loss Including Positive and Negative Examples
         pos_idx = pos.unsqueeze(2).expand_as(conf_data)
         neg_idx = neg.unsqueeze(2).expand_as(conf_data)
-        conf_p = conf_data[]
+        conf_p = conf_data[(pos_idx+neg_idx).gt(0)].view(-1, num_classes)
+        targets_weighted = conf_t[(pos+neg).gt(0)]
+        loss_c = F.cross_entropy(conf_p, targets_weighted, size_average=False)
+        
+        # sum of losses: L(x, c, l, g) = (Lconf(x, c) + αLloc(x,l,g)) / N
+        N = num_pos.data.sum()
+        loss_l /= N
+        loss_c /= N
+
+        return loss_l, loss_c

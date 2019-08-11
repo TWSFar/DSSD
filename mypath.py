@@ -2,7 +2,7 @@ class Path(object):
     @staticmethod
     def db_root_dir(dataset):
         if dataset == 'pascal':
-            return 'G:\\CV\\Reading\\Faster-RCNN\\data\\VOC2012'
+            return 'G:\\CV\\Reading\\DSSD\\data\\VOC2012'
         elif dataset == 'coco':
             return ''
         else:

@@ -26,6 +26,7 @@ from itertools import product
 # print(s_k)
 
 loss_c = torch.tensor([[5, 7, 2, 8]])
+m = loss_c.gt(3)
 _, loss_idx = loss_c.sort(1, descending=True)
 _, idx_rank = loss_idx.sort(1)
 thr = torch.tensor([[2]])

@@ -19,9 +19,6 @@ Dataset options
 # Image size
 __C.IMAGE_SIZE = 512
 
-# number of classes
-__C.NUM_CLASSES = 21
-
 # background label
 __C.BKG_LABEL = 0
 
