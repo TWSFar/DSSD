@@ -1,7 +1,7 @@
 import torch
 from torch.autograd import Function
 from utils.box_utils import decode
-from model.nms import nms
+from model.nms import nms_cpu
 
 
 class Detect(Function):

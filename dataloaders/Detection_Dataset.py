@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from datasets.pascal_voc import pascal_voc
+from dataloaders.datasets.pascal_voc import pascal_voc
 
 import torch
 from torch.utils.data import Dataset
@@ -23,7 +23,7 @@ class Detection_Dataset(Dataset):
         self.args = args
         self.cfg = cfg
         self.mode = mode
-        self.input_size = int(cfg.IMAGE_SIZE)
+        self.input_size = int(cfg.input_size)
 
         base_dir = Path.db_root_dir(args.dataset)
         if args.dataset == 'pascal':

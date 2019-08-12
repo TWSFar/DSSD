@@ -11,15 +11,15 @@ class PriorBox(object):
     """
     def __init__(self, cfg, backbone, output_stride):
         super(PriorBox, self).__init__()
-        self.image_size = cfg.IMAGE_SIZE
-        self.variance = np.array(cfg.VARIANCE or [0.1])
-        self.feature_maps = np.array(cfg.FEATURE_MAPS)
-        self.anchor_scales = np.array(cfg.ANCHOR_SCALES, dtype=np.float)
-        self.anchor_ratios = np.array(cfg.ANCHOR_RATIOS, dtype=np.float)
-        self.anchor_number = np.array(cfg.ANCHOR_NUMBER)
+        self.input_size = cfg.input_size
+        self.variance = np.array(cfg.variance or [0.1])
+        self.feature_maps = np.array(cfg.feature_maps)
+        self.anchor_scales = np.array(cfg.anchor_scales, dtype=np.float)
+        self.anchor_ratios = np.array(cfg.anchor_ratios, dtype=np.float)
+        self.anchor_number = np.array(cfg.anchor_number)
         assert self.anchor_number.sum() == len(self.anchor_scales)
 
-        self.clip = cfg.CLIP
+        self.clip = cfg.clip
         self.steps = self.step(backbone, output_stride)
         for v in self.variance:
             if v <= 0:
@@ -28,8 +28,8 @@ class PriorBox(object):
     def forward(self):
         mean = []
         for k, f in enumerate(self.feature_maps):
-            f_k = self.image_size / self.steps[k]
-            scale = self.anchor_scale(k) / self.image_size
+            f_k = self.input_size / self.steps[k]
+            scale = self.anchor_scale(k) / self.input_size
             s_k = []
             for s, r in product(scale, self.anchor_ratios):
                 s_k.append([s*sqrt(r), s/sqrt(r)])

@@ -33,7 +33,7 @@ class DSSD(nn.Module):
         self.decoder = build_decoder(net)
         self.head = build_head(inplances=self.decoder.plances, 
                                num_classes=num_classes,
-                               num_anchor=cfg.ANCHOR_NUMBER)
+                               num_anchor=cfg.anchor_number)
         
         if mode == 'test' or mode == 'val':
             raise NotImplementedError

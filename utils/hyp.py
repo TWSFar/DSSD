@@ -10,20 +10,20 @@ import torch
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch DSSD Training")
     parser.add_argument('--net', type=str, default='resnet',
-                    choices=['resnet', 'xception', 'drn', 'mobilenet'],
+                    choices=['resnet',],
                     help='backbone name (default: resnet)')
     parser.add_argument('--out-stride', type=int, default=16,
                     help='network output stride (default: 8)')
-    parser.add_argument('--dataset', type=str, default='voc',
-                    choices=['voc', 'coco'],
+    parser.add_argument('--dataset', type=str, default='pascal',
+                    choices=['pascal', 'coco'],
                     help='dataset name (default: pascal)')
     parser.add_argument('--use-sbd', action='store_true', default=False,
                     help='whether to use SBD dataset (default: True)')
     parser.add_argument('--workers', type=int, default=4,
                     metavar='N', help='dataloader threads')
-    parser.add_argument('--base-size', type=int, default=513,
+    parser.add_argument('--base-size', type=int, default=512,
                     help='base image size')
-    parser.add_argument('--crop-size', type=int, default=513,
+    parser.add_argument('--crop-size', type=int, default=512,
                     help='crop image size')
     parser.add_argument('--sync-bn', type=bool, default=None,
                     help='whether to use sync bn (default: auto)')
@@ -32,6 +32,8 @@ def parse_args():
     parser.add_argument('--loss-type', type=str, default='ce',
                     choices=['ce', 'focal'],
                     help='loss func type (default: ce)')
+    parser.add_argument('--visdom', default=False, type=bool, 
+                    help='Use visdom for loss visualization')
     # training hyper params
     parser.add_argument('--epochs', type=int, default=None, metavar='N',
                     help='number of epochs to train (default: auto)')
@@ -45,10 +47,21 @@ def parse_args():
                             testing (default: auto)')
     parser.add_argument('--use-balanced-weights', action='store_true', default=False,
                     help='whether to use balanced weights (default: False)')
-
+    # optimizer params
+    parser.add_argument('--lr', type=float, default=None, metavar='LR',
+                    help='learning rate (default: auto)')
+    parser.add_argument('--lr-scheduler', type=str, default='poly',
+                    choices=['poly', 'step', 'cos'],
+                    help='lr scheduler mode: (default: poly)')
+    parser.add_argument('--momentum', type=float, default=0.9,
+                    metavar='M', help='momentum (default: 0.9)')
+    parser.add_argument('--weight-decay', type=float, default=5e-4,
+                    metavar='M', help='w-decay (default: 5e-4)')
+    parser.add_argument('--nesterov', action='store_true', default=False,
+                    help='whether use nesterov (default: False)')
     # cuda, seed and logging
-    parser.add_argument('--cuda', action='store_true', default=
-                    False, help='ables CUDA training')
+    parser.add_argument('--cuda', action='store_true', default=False, 
+                    help='ables CUDA training')
     parser.add_argument('--ng', type=int, default=0, help='number of gpu')
 
     parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -80,7 +93,7 @@ def parse_args():
     if args.epochs is None:
         epochs = {
             'coco': 30,
-            'voc': 50,
+            'pascal': 50,
     }
         args.epochs = epochs[args.dataset.lower()]
     if args.batch_size is None:
@@ -89,15 +102,8 @@ def parse_args():
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size
 
-    if args.lr is None:
-        lrs = {
-            'coco': 0.1,
-            'voc': 0.007,
-        }
-        args.lr = lrs[args.dataset.lower()] / (4 * args.ng) * args.batch_size if args.ng > 1 else lrs[args.dataset.lower()]
-
     if args.checkname is None:
-        args.checkname = 'deeplab-' + str(args.backbone)
+        args.checkname = 'dssd-' + str(args.net)
 
     print('# parametes list:')
     for (key, value) in args.__dict__.items():
@@ -105,6 +111,9 @@ def parse_args():
     print('')
 
     torch.manual_seed(args.seed)
+
+    return args
+
 
 if __name__ == "__main__":
     parse_args()

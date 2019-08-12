@@ -15,19 +15,20 @@ class MultiBoxLoss(nn.Module):
                              False, args.cuda)
     """
 
-    def __init__(self, args, cfg):
+    def __init__(self, args, cfg, num_classes, weight=None):
         super(MultiBoxLoss, self).__init__()
 
         self.device = args.device
-        self.num_classes = cfg.NUM_CLASSES
-        self.threshold = cfg.OVERLAP_THRESH
-        self.background_label = cfg.BKG_LABEL
-        self.encode_targe = cfg.ENCODE_TARGE
-        self.use_prior_for_matching = cfg.PRIOR_FOR_MATCHING
-        self.do_neg_mining = cfg.NEG_MING
-        self.negpos_ratio = cfg.NEG_POS
-        self.neg_overlap = cfg.NEG_OVERLAP
-        self.variance = cfg.VARIANCE
+        self.num_classes = num_classes
+        self.threshold = cfg.overlap_thresh
+        self.background_label = cfg.bkg_label
+        self.encode_targe = cfg.encode_targe
+        self.use_prior_for_matching = cfg.prior_for_matching
+        self.do_neg_mining = cfg.neg_mining
+        self.negpos_ratio = cfg.neg_position
+        self.neg_overlap = cfg.neg_overlap
+        self.variance = cfg.variance
+        self.weight = weight
 
     def forward(self, preds, targets):
         loc_data, conf_data, priors = preds
@@ -77,7 +78,7 @@ class MultiBoxLoss(nn.Module):
         neg_idx = neg.unsqueeze(2).expand_as(conf_data)
         conf_p = conf_data[(pos_idx+neg_idx).gt(0)].view(-1, num_classes)
         targets_weighted = conf_t[(pos+neg).gt(0)]
-        loss_c = F.cross_entropy(conf_p, targets_weighted, size_average=False)
+        loss_c = F.cross_entropy(conf_p, targets_weighted, weight=self.weight, size_average=False)
         
         # sum of losses: L(x, c, l, g) = (Lconf(x, c) + αLloc(x,l,g)) / N
         N = num_pos.data.sum()
