@@ -43,7 +43,7 @@ def intersect(box_a, box_b):
     B = box_b.size(0)
     max_xy = torch.min(box_a[:, 2:].unsqueeze(1).expand(A, B, 2),
                        box_b[:, 2:].unsqueeze(0).expand(A, B, 2))
-    min_xy = tirch.max(box_a[:, :2].unsqueeze(1).expand(A, B, 2),
+    min_xy = torch.max(box_a[:, :2].unsqueeze(1).expand(A, B, 2),
                        box_b[:, :2].unsqueeze(0).expand(A, B, 2))
     inter = torch.clamp((max_xy - min_xy), min=0)
 
@@ -67,7 +67,7 @@ def jaccard(box_a, box_b):
     area_a = ((box_a[:, 2] - box_a[:, 0]) *
               (box_a[:, 3] - box_a[:, 1])).unsqueeze(1).expand_as(inter) # [A, B]
     area_b = ((box_b[:, 2] - box_b[:, 0]) *
-              (box_b[:, 3] - box_b[:, 0])).unsqueeze(1).expand_as(inter) # [A, B]
+              (box_b[:, 3] - box_b[:, 1])).unsqueeze(0).expand_as(inter) # [A, B]
     union = area_a + area_b - inter
 
     return inter / union
@@ -92,6 +92,7 @@ def match(threshold, truths, labels, priors, variances, loc_t, conf_t, idx):
         The matched indices corresponding to 1)location and 2)confidence preds.
     """
     # jaccard index
+    truths = xywh_2_xyxy(truths)
     overlaps = jaccard(
         truths,
         xywh_2_xyxy(priors)
@@ -140,7 +141,7 @@ def encode(matched, priors, variances):
     g_wh = (matched[:, 2:] - matched[:, :2]) / priors[:, 2:]
     g_wh = torch.log(g_wh) / variances[1]
     # return target for smooth_l1_loss
-    return torch.cat([g_cxcy, g_wh], 1) # [num_priors, 4]
+    return torch.cat([g_cxcy, g_wh], 1)  # [num_priors, 4]
 
 
 def decode(loc, priors, variances):
@@ -176,3 +177,8 @@ def log_sum_exp(x):
     """
     x_max = x.data.max()
     return torch.log(torch.sum(torch.exp(x-x_max), 1, keepdim=True)) + x_max
+
+if __name__ == "__main__":
+    input = torch.tensor([[1, 2, 3, 4]])
+    out = xywh_2_xyxy(input)
+    pass

@@ -32,6 +32,13 @@ Model options
 # Feature maps
 cfg.feature_maps = [64, 32, 16, 16]
 
+# nms threshold
+cfg.nms_thresh = 0.5
+
+# confidence threshold
+cfg.conf_thresh = 0.5
+
+
 """
 Loss options
 """

@@ -35,10 +35,10 @@ def build_head(inplances=[256, 256, 256, 256],
 
 if __name__ == "__main__":
     input = []
-    input += [torch.rand(2, 256, 64, 64)]
-    input += [torch.rand(2, 256, 32, 32)]
-    input += [torch.rand(2, 256, 16, 16)]
-    input += [torch.rand(2, 256, 16, 16)]
+    input += [torch.rand(1, 256, 64, 64)]
+    input += [torch.rand(1, 256, 32, 32)]
+    input += [torch.rand(1, 256, 16, 16)]
+    input += [torch.rand(1, 256, 16, 16)]
 
     model = build_head()
     output = model(input)

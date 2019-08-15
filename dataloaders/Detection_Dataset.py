@@ -1,16 +1,17 @@
 import cv2
 import numpy as np
-from dataloaders.datasets.pascal_voc import pascal_voc
 
 import torch
 from torch.utils.data import Dataset
 try:
+    from dataloaders.datasets.pascal_voc import pascal_voc
     from dataloaders.custom_transforms import train_transforms, test_transforms, normalize
     from mypath import Path
 except:
     print('test...')
     import sys
     sys.path.extend(['G:\\CV\\Reading\\DSSD',])
+    from dataloaders.datasets.pascal_voc import pascal_voc
     from dataloaders.custom_transforms import train_transforms, test_transforms, normalize
     from mypath import Path  
 
@@ -63,6 +64,7 @@ class Detection_Dataset(Dataset):
 
     def __getitem__(self, index):
         img = cv2.imread(self.roidb[index]['image'])
+
         assert img is not None, 'File Not Found ' + self.roidb[index]['image']
 
         boxes = self.roidb[index]['boxes']  # [[x, y, w, h], ...]
@@ -73,7 +75,7 @@ class Detection_Dataset(Dataset):
             img, target = train_transforms(img, target, self.input_size)
         else:
             img, target = test_transforms(img, target, self.input_size)
- 
+
         nL = len(target)
         if nL > 0:
             target[:, :4] = np.clip(target[:, :4], 0, self.input_size-1)
@@ -88,14 +90,14 @@ class Detection_Dataset(Dataset):
         img = np.ascontiguousarray(img, dtype=np.float32)
         img = normalize(img)
 
-        target_out = torch.zeros((nL, 6))
+        target_out = torch.zeros((nL, 5))
         if nL:
-            target_out[:, 1:] = torch.from_numpy(target)
+            target_out[:, :] = torch.from_numpy(target)
 
         img = torch.from_numpy(img).float()
         target_out = target_out.float()
 
-        return img, target
+        return img, target_out
 
     def _xyxy2xywh(self, x):
         # Convert bounding box format from [x1, y1, x2, y2] to [x, y, w, h]
@@ -124,12 +126,14 @@ if __name__ == "__main__":
     sys.path.extend(['G:\\CV\\Reading\\DSSD',])
     from utils.config import cfg
     from utils.hyp import parse_args
+    import torch.utils.data as data
+    from tqdm import tqdm
+    
     args = parse_args()
     dataset = Detection_Dataset(args, cfg)
-    import torch.utils.data as data
     dataloader = data.DataLoader(dataset, batch_size=1,
                             num_workers=4, shuffle=True, pin_memory=True)
     # res = dataset.__getitem__(0)
-    for (img, target) in dataloader:
+    for ii, (img, target) in enumerate(tqdm(dataloader)):
         print(target) 
     pass

@@ -48,12 +48,13 @@ class ASPP(nn.Module):
 
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
-                                             nn.BatchNorm2d(256),
+                                            #  nn.BatchNorm2d(256),
                                              nn.ReLU())
         self.conv1 = nn.Conv2d(256*4, 256, 1, bias=False)
         self.bn1 = nn.BatchNorm2d(256)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
+
         self._init_weight()
     
     def forward(self, x):
@@ -85,7 +86,7 @@ def build_aspp(backbone='resnet', output_stide=32):
 
 if __name__ == "__main__":
     model = build_aspp('resnet', 32)
-    input = torch.rand(2, 2048, 16, 16) # when batch = 1, batchnorm is error
+    input = torch.rand(1, 2048, 1, 1) # when batch = 1, batchnorm is error
     model.train()
     output = model(input)
     pass

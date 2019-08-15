@@ -12,8 +12,8 @@ def parse_args():
     parser.add_argument('--net', type=str, default='resnet',
                     choices=['resnet',],
                     help='backbone name (default: resnet)')
-    parser.add_argument('--out-stride', type=int, default=16,
-                    help='network output stride (default: 8)')
+    parser.add_argument('--output-stride', type=int, default=32,
+                    help='network output stride (default: 32)')
     parser.add_argument('--dataset', type=str, default='pascal',
                     choices=['pascal', 'coco'],
                     help='dataset name (default: pascal)')
@@ -97,7 +97,7 @@ def parse_args():
     }
         args.epochs = epochs[args.dataset.lower()]
     if args.batch_size is None:
-        args.batch_size = max(4 * args.ng, 2)
+        args.batch_size = max(4 * args.ng, 1)
 
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size

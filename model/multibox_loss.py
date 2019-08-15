@@ -32,14 +32,14 @@ class MultiBoxLoss(nn.Module):
 
     def forward(self, preds, targets):
         loc_data, conf_data, priors = preds
-        bs = loc_data.size(0) # batch size
+        bs = loc_data.size(0)  # batch size
         priors = priors[:loc_data.size(1), :]
         num_priors = (priors.size(0))
         num_classes = self.num_classes
 
         # match priors (default boxes) and ground truth boxes
         loc_t = torch.Tensor(bs, num_priors, 4)
-        conf_t = torch.Tensor(bs, num_priors)
+        conf_t = torch.LongTensor(bs, num_priors)
         for idx in range(bs):
             truths = targets[idx][:, :-1].data
             label = targets[idx][:, -1].data
@@ -48,7 +48,7 @@ class MultiBoxLoss(nn.Module):
                   self.variance, loc_t, conf_t, idx)
 
         loc_t.to(self.device)
-        conf_t.to(self.device)    
+        conf_t.to(self.device)
         pos = conf_t > 0
         num_pos = pos.sum(dim=1, keepdim=True)
 
@@ -78,7 +78,7 @@ class MultiBoxLoss(nn.Module):
         neg_idx = neg.unsqueeze(2).expand_as(conf_data)
         conf_p = conf_data[(pos_idx+neg_idx).gt(0)].view(-1, num_classes)
         targets_weighted = conf_t[(pos+neg).gt(0)]
-        loss_c = F.cross_entropy(conf_p, targets_weighted, weight=self.weight, size_average=False)
+        loss_c = F.cross_entropy(conf_p, targets_weighted, weight=self.weight, reduction='sum')
         
         # sum of losses: L(x, c, l, g) = (Lconf(x, c) + αLloc(x,l,g)) / N
         N = num_pos.data.sum()
