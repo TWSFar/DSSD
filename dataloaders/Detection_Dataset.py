@@ -63,14 +63,15 @@ class Detection_Dataset(Dataset):
         return ratio_list[ratio_index], ratio_index
 
     def __getitem__(self, index):
-        img = cv2.imread(self.roidb[index]['image'])
-
+        img_path = self.roidb[index]['image']
+        img = cv2.imread(img_path)
+        scrimg_shape = np.array(img.shape[0:2])
         assert img is not None, 'File Not Found ' + self.roidb[index]['image']
 
         boxes = self.roidb[index]['boxes']  # [[x, y, w, h], ...]
         classes = self.roidb[index]['gt_classes']  # [ c, ...]
         target = np.hstack((boxes, np.expand_dims(classes, axis=1))) # [[x, y, w, h, c], ...]
-
+        
         if self.mode == 'train':
             img, target = train_transforms(img, target, self.input_size)
         else:
@@ -79,8 +80,7 @@ class Detection_Dataset(Dataset):
         nL = len(target)
         if nL > 0:
             target[:, :4] = np.clip(target[:, :4], 0, self.input_size-1)
-            target[:, :4] = self._xyxy2xywh(target[:, :4].copy())
-
+            # target[:, :4] = self._xyxy2xywh(target[:, :4].copy())
             # Normalize coordinates 0 - 1
             target[:, [1, 3]] /= img.shape[0]  # height
             target[:, [0, 2]] /= img.shape[1]  # width
@@ -97,7 +97,7 @@ class Detection_Dataset(Dataset):
         img = torch.from_numpy(img).float()
         target_out = target_out.float()
 
-        return img, target_out
+        return img, target_out, scrimg_shape, img_path
 
     def _xyxy2xywh(self, x):
         # Convert bounding box format from [x1, y1, x2, y2] to [x, y, w, h]
@@ -108,8 +108,22 @@ class Detection_Dataset(Dataset):
         y[:, 3] = x[:, 3] - x[:, 1]
         return y
 
+    def _xywh2xyxy(self, x):
+        # Convert bounding box format from [x, y, w, h] to [x1, y1, x2, y2]
+        y = torch.zeros_like(x) if isinstance(x, torch.Tensor) else np.zeros_like(x)
+        y[:, 0] = x[:, 0] - x[:, 2] / 2
+        y[:, 1] = x[:, 1] - x[:, 3] / 2
+        y[:, 2] = x[:, 0] + x[:, 2] / 2
+        y[:, 3] = x[:, 1] + x[:, 3] / 2
+        return y
+
     def __len__(self):
         return self.num_images
+
+    @staticmethod
+    def collate_fn(batch):
+        images, targets, shape, path = list(zip(*batch))  # transposed
+        return torch.stack(images, dim=0), targets, shape, path
 
 
 def show_image(img, labels):
@@ -130,10 +144,18 @@ if __name__ == "__main__":
     from tqdm import tqdm
     
     args = parse_args()
-    dataset = Detection_Dataset(args, cfg)
-    dataloader = data.DataLoader(dataset, batch_size=1,
-                            num_workers=4, shuffle=True, pin_memory=True)
-    # res = dataset.__getitem__(0)
-    for ii, (img, target) in enumerate(tqdm(dataloader)):
-        print(target) 
+    dataset = Detection_Dataset(args, cfg, mode='val')
+    dataloader = data.DataLoader(dataset, batch_size=3,
+                                 num_workers=4, shuffle=True,
+                                 pin_memory=True,
+                                 collate_fn=dataset.collate_fn,
+                                 drop_last=True)
+    res = dataset.__getitem__(0)
+    for ii, (imgs, targets, shapes, path) in enumerate(dataloader):
+        for id, img in enumerate(imgs):
+            _, _, h, w = imgs.shape
+            target = targets[id].numpy()
+            target[:, [1, 3]] *= h
+            target[:, [0, 2]] *= w
+            show_image(img.numpy().transpose(1, 2, 0), target)
     pass

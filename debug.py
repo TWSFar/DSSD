@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch
 from itertools import product
 import torch as t
-
-k = t.tensor([0, 0, 1])
-print(torch.any(torch.isnan(k)))
-pass
+import cv2
+im = cv2.imread('G:\\CV\\Reading\\DSSD\\data\\VOC2012\\JPEGImages\\2007_000033.jpg')
+print(im.shape)

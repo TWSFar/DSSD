@@ -1,11 +1,25 @@
 import numpy as np
 import argparse
-try:
-    from torch_utils import select_device
-except:
-    from .torch_utils import select_device
-
 import torch
+
+
+def select_device(force_cpu=False, is_head=False):
+    cuda = False if force_cpu else torch.cuda.is_available()
+    device = torch.device('cuda:0' if cuda else 'cpu')
+    ng = 0
+    if not cuda:
+        print('Using CPU\n')
+    if cuda:
+        c = 1024 ** 2
+        ng = torch.cuda.device_count()
+        x = [torch.cuda.get_device_properties(i) for i in range(ng)]
+        if is_head:
+            for i in range(ng):
+                print('Using CUDA device{} _CudaDeviceProperties(name={}, total_memory={}MB'.\
+                        format(i, x[i].name, round(x[i].total_memory/c)))
+            print('')
+    return device, ng
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch DSSD Training")
@@ -75,11 +89,15 @@ def parse_args():
     parser.add_argument('--ft', action='store_true', default=False,
                     help='finetuning on a different dataset')
     # evaluation option
-    parser.add_argument('--eval-interval', type=int, default=1,
+    parser.add_argument('--validate', type=int, default=1,
                     help='evaluuation interval (default: 1)')
+    parser.add_argument('--eval_from', type=str, default=None,
+                    help='evaluate model file path')
     parser.add_argument('--no-val', action='store_true', default=False,
                     help='skip validation during training')
-
+    parser.add_argument('--eval-batch-size', type=int, default=1,
+                    metavar='N', help='input batch size for \
+                            evaluator (default: auto)')
     args = parser.parse_args()
 
     args.device, args.ng = select_device(is_head=True) 
@@ -101,6 +119,9 @@ def parse_args():
 
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size
+    
+    if args.eval_batch_size is None:
+        args.eval_batch_size = args.batch_size
 
     if args.checkname is None:
         args.checkname = 'dssd-' + str(args.net)

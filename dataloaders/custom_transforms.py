@@ -46,7 +46,7 @@ def augment_hsv(img, fraction):
     return img
 
 
-def letterbox(img, labels, height=416, mode='train', color=(127.5, 127.5, 127.5)):
+def letterbox(img, labels, height=512, mode='train', color=(127.5, 127.5, 127.5)):
     """
     resize a rectangular image to a padded square
     """

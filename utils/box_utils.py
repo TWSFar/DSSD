@@ -50,7 +50,7 @@ def intersect(box_a, box_b):
     return inter[:, :, 0] * inter[:, :, 1]
 
 
-def jaccard(box_a, box_b):
+def jaccard(box_a, box_b, is_xyxy=True):
     """
     Compute the jaccard overlap of two sets of boxes.  The jaccard overlap
     is simply the intersection over union of two boxes.  Here we operate on
@@ -63,6 +63,10 @@ def jaccard(box_a, box_b):
     Return:
         jaccard overlap: (tensor) Shape: [box_a.size(0), box_b.size(0)]
     """
+    if not is_xyxy:
+        box_a = xywh_2_xyxy(box_a)
+        box_b = xywh_2_xyxy(box_b)
+
     inter = intersect(box_a, box_b)
     area_a = ((box_a[:, 2] - box_a[:, 0]) *
               (box_a[:, 3] - box_a[:, 1])).unsqueeze(1).expand_as(inter) # [A, B]
@@ -92,7 +96,7 @@ def match(threshold, truths, labels, priors, variances, loc_t, conf_t, idx):
         The matched indices corresponding to 1)location and 2)confidence preds.
     """
     # jaccard index
-    truths = xywh_2_xyxy(truths)
+    # truths = xywh_2_xyxy(truths)
     overlaps = jaccard(
         truths,
         xywh_2_xyxy(priors)
@@ -177,6 +181,7 @@ def log_sum_exp(x):
     """
     x_max = x.data.max()
     return torch.log(torch.sum(torch.exp(x-x_max), 1, keepdim=True)) + x_max
+
 
 if __name__ == "__main__":
     input = torch.tensor([[1, 2, 3, 4]])

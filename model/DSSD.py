@@ -34,12 +34,11 @@ class DSSD(nn.Module):
         self.head = build_head(inplances=self.decoder.plances, 
                                num_classes=num_classes,
                                num_anchor=cfg.anchor_number)
-        
-        if mode == 'test' or mode == 'val':
-            raise NotImplementedError
-            self.softmax = nn.Softmax(dim=-1)
-            self.detect = Detect(num_classes, 0, 200, 0.01, 0.45)
-        
+
+        # For detect
+        self.softmax = nn.Softmax(dim=-1)
+        self.detect = Detect(cfg, num_classes)
+
         if freeze_bn:
             self.freeze_bn
 
