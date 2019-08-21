@@ -205,8 +205,8 @@ class pascal_voc(object):
                 del self.roidb[i]
                 i -= 1
             i += 1
-        print('after filtering, there are %d images...' % (len(self.roidb)))
-    
+        print('after filtering, there are %d images...\n' % (len(self.roidb)))
+
     def cre_cache_path(self):
         cache_path = osp.join(self._base_dir, 'cache')
         if not osp.exists(cache_path):

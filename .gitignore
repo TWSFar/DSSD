@@ -7,3 +7,4 @@ data/
 weights/
 .vscode/
 debug/
+work_dirs/

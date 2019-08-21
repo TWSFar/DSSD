@@ -42,7 +42,7 @@ cfg.conf_thresh = 0.1
 cfg.iou_thresh = 0.5
 
 # top k nms
-cfg.top_k = 2000
+cfg.top_k = 200
 
 
 """
@@ -72,7 +72,7 @@ Anchor options
 cfg.anchor_scales = [32, 96, 160, 224, 288, 352, 416, 480]
 
 # Anchor number of per layer
-cfg.anchor_number = [2, 2, 2, 2]
+cfg.anchor_number = [6, 6, 6, 6]
 
 # Anchor ratios
 cfg.anchor_ratios = [0.5, 1, 2]

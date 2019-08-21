@@ -17,14 +17,16 @@ class PriorBox(object):
         self.anchor_scales = np.array(cfg.anchor_scales, dtype=np.float)
         self.anchor_ratios = np.array(cfg.anchor_ratios, dtype=np.float)
         self.anchor_number = np.array(cfg.anchor_number)
-        assert self.anchor_number.sum() == len(self.anchor_scales)
+        self.num_layer_scales = \
+                np.array([an/len(self.anchor_ratios) for an in self.anchor_number], dtype=np.int16)
+        assert self.anchor_number.sum() == len(self.anchor_scales) * len(self.anchor_ratios)
 
         self.clip = cfg.clip
         self.steps = self.step(backbone, output_stride)
         for v in self.variance:
             if v <= 0:
                 raise ValueError('Variances must be greater than 0')
-        
+
     def forward(self):
         mean = []
         for k, f in enumerate(self.feature_maps):
@@ -33,26 +35,26 @@ class PriorBox(object):
             s_k = []
             for s, r in product(scale, self.anchor_ratios):
                 s_k.append([s*sqrt(r), s/sqrt(r)])
-                
+
             for i, j in product(range(f), repeat=2):
                 cx = (j + 0.5) / f_k
                 cy = (i + 0.5) / f_k
                 for w, h in s_k:
                     mean += [cx, cy, w, h]
-        
+
         output = torch.Tensor(mean).view(-1, 4)
         if self.clip:
             output.clamp_(max=1, min=0)
         return output
-    
+
     def anchor_scale(self, k):
         """
         return anchor scale of k'th feature layer(low to high, start by 0)
         """
-        start = self.anchor_number[0:k].sum()
-        end = self.anchor_number[0:k+1].sum()
+        start = self.num_layer_scales[0:k].sum()
+        end = self.num_layer_scales[0:k+1].sum()
         return self.anchor_scales[start:end]
-        
+
     def step(self, backbone, output_stride):
         if backbone == 'resnet':
             if output_stride == 32:

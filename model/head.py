@@ -5,14 +5,14 @@ import torch.nn as nn
 class head(nn.Module):
     def __init__(self, inplances, num_classes, num_anchor):
         super(head, self).__init__()
-        
+
         self.loc_layers = []
         self.conf_layers = []
         for ii, inplance in enumerate(inplances):
-            self.loc_layers += [nn.Conv2d(inplance, 
+            self.loc_layers += [nn.Conv2d(inplance,
                                           num_anchor[ii]*4,
                                           kernel_size=3, stride=1, padding=1)]
-            self.conf_layers += [nn.Conv2d(inplance, 
+            self.conf_layers += [nn.Conv2d(inplance,
                                            num_anchor[ii]*num_classes,
                                            kernel_size=3, stride=1, padding=1)]
 
@@ -22,14 +22,16 @@ class head(nn.Module):
         for (x, l, c) in zip(input, self.loc_layers, self.conf_layers):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
-        
-        loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1) 
-        conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
-        return loc, conf 
 
-def build_head(inplances=[256, 256, 256, 256], 
-               num_classes=21, 
-               num_anchor=[2, 2, 2, 2]):
+        loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
+        conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
+
+        return loc, conf
+
+
+def build_head(inplances=[256, 256, 256, 256],
+               num_classes=21,
+               num_anchor=[6, 6, 6, 6]):
     return head(inplances, num_classes, num_anchor)
 
 

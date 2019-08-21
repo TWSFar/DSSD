@@ -42,8 +42,8 @@ class Trainer(object):
                 shuffle=True,
                 pin_memory=True,
                 drop_last=True,
-                collate_fn=train_dataset.collate_fn,
-                drop_last=True)
+                collate_fn=train_dataset.collate_fn)
+        self.num_batch = len(self.train_loader)
 
         # Define Network
         # initilize the network here.
@@ -117,23 +117,24 @@ class Trainer(object):
         # Visdom
         if args.visdom:
             vis = visdom.Visdom()
-            vis_legend = ['Loss_local', 'Loss_confidence', 'mAP_50_F1', 'mAP_50_P', 'mAP_50_R']
+            vis_legend = ['Loss_local', 'Loss_confidence', 'mAP', 'mF1']
             self.epoch_plot = create_vis_plot(vis, 'Epoch', 'Loss', 'train loss', vis_legend[0:2])
             self.batch_plot = create_vis_plot(vis, 'Batch', 'Loss', 'batch loss', vis_legend[0:2])
-            self.test_plot = create_vis_plot(vis, 'Epoch', 'Loss', 'test loss', vis_legend)
+            self.val_plot = create_vis_plot(vis, 'Epoch', 'result', 'val loss', vis_legend[2:4])
             self.vis = vis
             self.vis_legend = vis_legend
         model_info(self.model)
 
     def training(self, epoch):
         self.time.epoch()
+        self.model.mode = 'train'  # must line
         self.model.train()
         ave_loss_l = 0.
         ave_loss_c = 0.
         for ii, (images, targets, _, _) in enumerate(self.train_loader):
             self.time.batch()
             images = images.to(self.args.device)
-            targets = targets.to(self.args.device)
+            targets = [ann.to(self.args.device) for ann in targets]
             self.scheduler(self.optimizer, ii, epoch, self.best_pred)
             self.optimizer.zero_grad()
 
@@ -142,19 +143,40 @@ class Trainer(object):
             loss_l, loss_c = self.criterion(output, targets)
             loss = loss_l + loss_c
             ave_loss_c += (loss_c - ave_loss_c) / (ii + 1)
-            ave_loss_l += (loss_c - ave_loss_l) / (ii + 1)
-            assert torch.isnan(loss), 'WARNING: nan loss detected, ending training'
+            ave_loss_l += (loss_l - ave_loss_l) / (ii + 1)
+            assert not torch.isnan(loss), 'WARNING: nan loss detected, ending training'
             loss.backward()
             self.optimizer.step()
 
+            # visdom
             if self.args.visdom:
                 update_vis_plot(self.vis, ii, [loss_l, loss_c], self.batch_plot, 'append')
 
-            print('[Epoch: [%d], loc_loss: %10.3g, conf_loss: %10.3g, time: %5.2gs]' % (
-                epoch, loss_l, loss_c, self.time.batch))
+            show_info = '[mode: train' +\
+                'Epoch: [%d][%d/%d], ' % (epoch, ii, self.num_batch) +\
+                'lr: %5.4g, ' % self.optimizer.param_groups[0]['lr'] +\
+                'loc_loss: %5.3g, conf_loss: %5.3g, time: %5.2gs]' %\
+                (loss_l, loss_c, self.time.batch())
+            if (ii + 1) % 1 == 0:
+                print(show_info)
 
-        print('[Epoch: [%d], average_loc_loss: %10.3g, average_conf_loss: %10.3g, time: %5.2gm]' % (
-                epoch, ave_loss_l, ave_loss_c, self.time.epoch))
+            # Save log info
+            self.saver.save_log(show_info)
+
+        epoch_show_info = '[mode: train, ' +\
+            'Epoch: [%d], ' % epoch +\
+            'lr: %5.4g, ' % self.optimizer.param_groups[0]['lr'] +\
+            'average_loc_loss: %5.3g, ' % ave_loss_l +\
+            'average_conf_loss: %5.3g, ' % ave_loss_c +\
+            'time: %5.2gm]' % self.time.epoch()
+        print(epoch_show_info)
+
+        # Save log info
+        self.saver.save_log(epoch_show_info)
+
+        # visdom
+        if self.args.visdom:
+            update_vis_plot(self.vis, epoch, [ave_loss_l, ave_loss_c], self.epoch_plot, 'append')
 
 
 def main():
@@ -163,30 +185,28 @@ def main():
 
     trainer = Trainer(args)
     evaluator = Evaluator(args)
-    for epoch in range(trainer.start_epoch, trainer.args.epochs):
+    for epoch in range(trainer.start_epoch, args.epochs):
         trainer.training(epoch)
-        if not trainer.args.no_val and epoch % args.validate == (args.validate-1):
-            evaluator.validation(trainer.model, epoch)
+        if not args.no_val and epoch % args.validate == (args.validate - 1):
+            map, mf1 = evaluator.validation(trainer.model, epoch)
+            val_svar_pf = '[mode: val ' +\
+                'mAP: %5.4g, ' % map * 100 +\
+                'mF1: %5.4g]' % mf1
+            trainer.saver.save_log(val_svar_pf)
+            if args.visdom:
+                update_vis_plot(trainer.vis, epoch, [map, mf1], trainer.val_plot, 'append')
 
-        if trainer.args.no_val:
+        if evaluator.is_best:
+            trainer.best_pred = evaluator.new_pred
+
+        if args.is_save:
             # save checkpoint every epoch
-            is_best = False
             trainer.saver.save_checkpoint({
-                'epoch': epoch + 1,
-                'state_dict': trainer.model.module.state_dict() if trainer.args.ng > 1 else trainer.model.state_dict(),
+                'epoch': epoch,
+                'state_dict': trainer.model.module.state_dict() if args.ng > 1 else trainer.model.state_dict(),
                 'optimizer': trainer.optimizer.state_dict(),
-                'best_pred': trainer.best_pred,
-            }, is_best)
-
-        if trainer.new_pred > trainer.best_pred:
-            is_best = True
-            trainer.best_pred = trainer.new_pred
-            trainer.saver.save_checkpoint({
-                'epoch': epoch + 1,
-                'state_dict': trainer.model.module.state_dict() if trainer.args.ng > 1 else trainer.model.state_dict(),
-                'optimizer': trainer.optimizer.state_dict(),
-                'best_pred': trainer.best_pred,
-            }, is_best)
+                'best_pred': evaluator.best_pred,
+            }, evaluator.is_best)
 
 
 if __name__ == "__main__":

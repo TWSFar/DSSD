@@ -1,7 +1,0 @@
-datset:pascal
-backbone:resnet
-output_stride:32
-lr:0.001
-lr_scheduler:poly
-epoch:50
-base_size:512

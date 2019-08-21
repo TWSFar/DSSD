@@ -58,11 +58,11 @@ class DSSD(nn.Module):
                 loc.view(loc.size(0), -1, 4),
                 self.softmax(conf.view(conf.size(0), -1,
                              self.num_classes)),
-                self.priors.type(type(x.data))
+                self.priors
             )
 
         return output
-    
+
     def get_1x_lr_params(self):
         modules = [self.backbone]
         for i in range(len(modules)):
@@ -71,7 +71,7 @@ class DSSD(nn.Module):
                     for p in m[1].parameters():
                         if p.requires_grad:
                             yield p
-        
+
     def get_10x_lr_params(self):
         modules = [self.aspp, self.decoder, self.head]
         for i in range(len(modules)):
@@ -80,7 +80,7 @@ class DSSD(nn.Module):
                     for p in m[1].parameters():
                         if p.requires_grad:
                             yield p
-        
+
     def freeze_bn(self):
         for m in self.modules():
             for m in self.modules():

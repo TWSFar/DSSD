@@ -2,23 +2,22 @@ import os
 import os.path as osp
 import shutil
 import torch
-from collections import OrderedDict
 import glob
 
 
 class Saver(object):
-    
+
     def __init__(self, args, cfg):
         self.args = args
         self.cfg = cfg
-        self.directory = os.path.join('run', args.dataset, args.checkname)
+        self.directory = os.path.join(args.work_dirs, args.dataset, args.checkname)
         self.runs = sorted(glob.glob(osp.join(self.directory, 'experiment_*')))
         run_id = int(self.runs[-1].split('_')[-1]) + 1 if self.runs else 0
 
         self.experiment_dir = os.path.join(self.directory, 'experiment_{}'.format(str(run_id)))
         if not osp.exists(self.experiment_dir):
             os.makedirs(self.experiment_dir)
-        
+
     def save_checkpoint(self, state, is_best, filename='checkpoint.pth'):
         ''' Saver checkpoint to disk '''
         filename = os.path.join(self.experiment_dir, filename)
@@ -43,7 +42,12 @@ class Saver(object):
                     shutil.copyfile(filename, osp.join(self.directory, 'model_best.pth.tar'))
             else:
                 shutil.copyfile(filename, os.path.join(self.directory, 'model_best.pth.tar'))
-        
+
+    def save_log(self, stats):
+        path = osp.join(self.experiment_dir, 'train_val.log')
+        with open(path, 'a') as f:
+            f.write(stats + '\n')
+
     def save_experiment_config(self):
         logfile = osp.join(self.experiment_dir, 'parameters.txt')
         log_file = open(logfile, 'w')
@@ -51,7 +55,7 @@ class Saver(object):
         log_file.write('hyp:\n')
         for key, val in self.args.__dict__.items():
             log_file.write(key + ':' + str(val) + '\n')
-        
+
         log_file.write('\nconfig:\n')
         for key, val in self.cfg.items():
             log_file.write(key + ':' + str(val) + '\n')

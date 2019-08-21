@@ -32,6 +32,7 @@ class Detection_Dataset(Dataset):
         else:
             raise NotImplementedError
         self.roidb = imdb.roidb
+        self.classes = imdb._classes
         self.num_classes = imdb.num_classes
         self.num_images = imdb.num_images
         # self.ratio_list, self.ration_index = self.rank_roidb_ratio()
@@ -141,8 +142,7 @@ if __name__ == "__main__":
     from utils.config import cfg
     from utils.hyp import parse_args
     import torch.utils.data as data
-    from tqdm import tqdm
-    
+
     args = parse_args()
     dataset = Detection_Dataset(args, cfg, mode='val')
     dataloader = data.DataLoader(dataset, batch_size=3,

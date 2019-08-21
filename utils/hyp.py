@@ -80,7 +80,11 @@ def parse_args():
 
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-    # checking point
+    # checking point and save model path
+    parser.add_argument('--is-save', type=bool, default=True,
+                    help='save chekpoint (default: True)')
+    parser.add_argument('--work-dirs', type=str, default='work_dirs',
+                    help='save model path')
     parser.add_argument('--resume', type=str, default=None,
                     help='resuming path')
     parser.add_argument('--checkname', type=str, default=None,

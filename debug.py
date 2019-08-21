@@ -5,6 +5,15 @@ import torch.nn as nn
 import torch
 from itertools import product
 import torch as t
-import cv2
-im = cv2.imread('G:\\CV\\Reading\\DSSD\\data\\VOC2012\\JPEGImages\\2007_000033.jpg')
-print(im.shape)
+
+class test(nn.Module):
+    def __init__(self):
+        super(test, self).__init__()
+    
+    def forward(self):
+        return [None] * 3
+
+
+m = test()
+r = m()
+pass

@@ -28,7 +28,7 @@ class MultiBoxEval(nn.Module):
             targets = labels[id]
             preds = output[id]
             num_gt = len(targets)  # number of target
-            tcls = targets[:, 5].tolist() if num_gt else []  # target class
+            tcls = targets[:, 4].tolist() if num_gt else []  # target class
 
             # predict is none
             if preds is None:
@@ -40,7 +40,7 @@ class MultiBoxEval(nn.Module):
             correct = [0] * len(preds)
             if num_gt:
                 detected = []
-                tcls_tensor = labels[:, 0]
+                tcls_tensor = targets[:, 4]
 
                 # target boxes
                 tboxes = targets[:, :4]
@@ -49,7 +49,9 @@ class MultiBoxEval(nn.Module):
                 preds[:, [0, 2]] *= self.width
                 preds[:, [1, 3]] *= self.height
 
-                for ii, (*pbox, pconf, pcls) in enumerate(preds):
+                for ii, pred in enumerate(preds):
+                    pbox = pred[:4].unsqueeze(0)
+                    pcls = pred[5]
 
                     # Break if all targets already located in image
                     if len(detected) == num_gt:
@@ -61,7 +63,7 @@ class MultiBoxEval(nn.Module):
 
                     # Best iou, index between pred and targets
                     m = (pcls == tcls_tensor).nonzero().view(-1)
-                    iou, bi = jaccard(pbox, tboxes).max(0)
+                    iou, bi = jaccard(pbox, tboxes[m]).max(1)
 
                     # If iou > threshold and class is correct mark as correct
                     if iou > self.iou_thresh and m[bi] not in detected:
@@ -73,18 +75,22 @@ class MultiBoxEval(nn.Module):
         
         return stats
 
+
 if __name__ == "__main__":
+    import numpy as np
     evaluator = MultiBoxEval(1, 0.5)
     temp = torch.tensor([[1, 1, 4, 4, 0.4, 1],
                          [4, 4, 20, 20, 0.9, 1],
                          [1, 1, 4, 4, 0.7, 2],
                          [1, 1, 5, 5, 0.8, 2]])
 
-    target = torch.tensor([[1, 1, 20, 20, 1],
-                           [2, 2, 5, 5, 2]])
+    target = torch.tensor([[1, 1, 20, 20, 1.0],
+                           [2, 2, 5, 5, 2.0]])
 
-    output = [temp]
-    targets = [target]
-
-    res = evaluator(output, targets, 1)
+    output = [temp, temp]
+    targets = [target, target]
+    res = []
+    res += evaluator(output, targets, 2)
+    res += evaluator(output, targets, 1)
+    stats = [np.concatenate(x, 0) for x in list(zip(*res))]
     pass
