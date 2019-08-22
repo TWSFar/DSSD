@@ -46,21 +46,23 @@ def parse_args():
     parser.add_argument('--loss-type', type=str, default='ce',
                     choices=['ce', 'focal'],
                     help='loss func type (default: ce)')
-    parser.add_argument('--visdom', default=False, type=bool, 
+    parser.add_argument('--visdom', default=False, type=bool,
                     help='Use visdom for loss visualization')
+
     # training hyper params
     parser.add_argument('--epochs', type=int, default=None, metavar='N',
                     help='number of epochs to train (default: auto)')
     parser.add_argument('--start_epoch', type=int, default=0,
                     metavar='N', help='start epochs (default:0)')
-    parser.add_argument('--batch-size', type=int, default=None,
+    parser.add_argument('--batch-size', type=int, default=2,
                     metavar='N', help='input batch size for \
                             training (default: auto)')
-    parser.add_argument('--test-batch-size', type=int, default=None,
+    parser.add_argument('--test-batch-size', type=int, default=2,
                     metavar='N', help='input batch size for \
                             testing (default: auto)')
     parser.add_argument('--use-balanced-weights', action='store_true', default=False,
                     help='whether to use balanced weights (default: False)')
+
     # optimizer params
     parser.add_argument('--lr', type=float, default=None, metavar='LR',
                     help='learning rate (default: auto)')
@@ -73,13 +75,16 @@ def parse_args():
                     metavar='M', help='w-decay (default: 5e-4)')
     parser.add_argument('--nesterov', action='store_true', default=False,
                     help='whether use nesterov (default: False)')
+
     # cuda, seed and logging
     parser.add_argument('--cuda', action='store_true', default=False, 
                     help='ables CUDA training')
+    parser.add_argument('--use-multi-gpu', default=True, type=bool,
+                    help='use multiple gpu')
     parser.add_argument('--ng', type=int, default=0, help='number of gpu')
-
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
+
     # checking point and save model path
     parser.add_argument('--is-save', type=bool, default=True,
                     help='save chekpoint (default: True)')
@@ -89,9 +94,11 @@ def parse_args():
                     help='resuming path')
     parser.add_argument('--checkname', type=str, default=None,
                     help='set the checkpoint name')
+
     # finetuning pre-trained models
     parser.add_argument('--ft', action='store_true', default=False,
                     help='finetuning on a different dataset')
+
     # evaluation option
     parser.add_argument('--validate', type=int, default=1,
                     help='evaluuation interval (default: 1)')
@@ -99,12 +106,13 @@ def parse_args():
                     help='evaluate model file path')
     parser.add_argument('--no-val', action='store_true', default=False,
                     help='skip validation during training')
-    parser.add_argument('--eval-batch-size', type=int, default=1,
+    parser.add_argument('--eval-batch-size', type=int, default=2,
                     metavar='N', help='input batch size for \
                             evaluator (default: auto)')
     args = parser.parse_args()
 
     args.device, args.ng = select_device(is_head=True) 
+    # args.ng = 1
     if args.ng > 0:
         args.cuda = True
         args.gpu_ids = [int(s) for s in range(args.ng)]

@@ -2,7 +2,6 @@ import os
 import visdom
 import os.path as osp
 import numpy as np
-from tqdm import tqdm
 
 from dataloaders.Detection_Dataset import Detection_Dataset
 from model.DSSD import DSSD
@@ -48,13 +47,13 @@ class Trainer(object):
         # Define Network
         # initilize the network here.
         if args.net == 'resnet':
-            model = DSSD(cfg=cfg,
+            model = DSSD(args=args,
+                         cfg=cfg,
                          net=args.net,
                          output_stride=32,
                          num_classes=self.num_classes,
                          img_size=self.input_size,
-                         pretrained=True,
-                         mode='train')
+                         pretrained=True)
         else:
             NotImplementedError
 
@@ -104,10 +103,13 @@ class Trainer(object):
                   .format(args.resume, checkpoint['epoch']))
 
         # Using cuda
-        if args.ng > 1:
-            self.model = torch.nn.DataParallel(self.model, device_ids=args.device_ids)
-        self.model = self.model.to(args.device)
-
+        self.optimizer = self.model.to(self.args.device)
+        self.model = self.model.to(self.args.device)
+        if args.ng > 1 and args.use_multi_gpu:
+            self.model = torch.nn.DataParallel(self.model,
+                                               device_ids=args.gpu_ids)
+            self.optimizer = torch.nn.DataParallel(self.optimizer,
+                                                   device_ids=args.gpu_ids)
         # Clear start epoch if fine-tuning
         if args.ft:
             self.start_epoch = 0
@@ -127,7 +129,6 @@ class Trainer(object):
 
     def training(self, epoch):
         self.time.epoch()
-        self.model.mode = 'train'  # must line
         self.model.train()
         ave_loss_l = 0.
         ave_loss_c = 0.
@@ -138,7 +139,7 @@ class Trainer(object):
             self.scheduler(self.optimizer, ii, epoch, self.best_pred)
             self.optimizer.zero_grad()
 
-            output = self.model(images)
+            output = self.model(images, mode='train')
 
             loss_l, loss_c = self.criterion(output, targets)
             loss = loss_l + loss_c
@@ -146,7 +147,10 @@ class Trainer(object):
             ave_loss_l += (loss_l - ave_loss_l) / (ii + 1)
             assert not torch.isnan(loss), 'WARNING: nan loss detected, ending training'
             loss.backward()
-            self.optimizer.step()
+            if self.args.ng > 1 and self.args.use_multi_gpu:
+                self.optimizer.module.step()
+            else:
+                self.optimizer.step()
 
             # visdom
             if self.args.visdom:
@@ -203,8 +207,10 @@ def main():
             # save checkpoint every epoch
             trainer.saver.save_checkpoint({
                 'epoch': epoch,
-                'state_dict': trainer.model.module.state_dict() if args.ng > 1 else trainer.model.state_dict(),
-                'optimizer': trainer.optimizer.state_dict(),
+                'state_dict': trainer.model.module.state_dict() \
+                    if args.ng > 1 and args.use_multi_gpu else trainer.model.state_dict(),
+                'optimizer': trainer.optimizer.module.state_dict() \
+                    if args.ng > 1 and args.use_multi_gpu else trainer.optimizer.state_dict(),
                 'best_pred': evaluator.best_pred,
             }, evaluator.is_best)
 

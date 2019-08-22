@@ -1,33 +1,35 @@
 import torch
 import torch.nn as nn
 import sys
-sys.path.append('G:\\CV\\Reading\\DSSD')
+sys.path.append('/home/twsf/work/DSSD')
 from model.aspp import build_aspp
 from model.decoder import build_decoder
 from model.backbone import build_backbone
 from model.head import build_head
 from model.functions.detection import Detect
 from model.functions.PriorBox import PriorBox
+import torch.backends.cudnn as cudnn
 
 
 class DSSD(nn.Module):
     def __init__(self,
+                 args,
                  cfg=None,
-                 net='resnet', 
-                 output_stride=32, 
+                 net='resnet',
+                 output_stride=32,
                  num_classes=21,
                  img_size=512,
-                 pretrained=True, 
-                 mode='train',
+                 pretrained=True,
                  freeze_bn=False):
         super(DSSD, self).__init__()
 
-        self.mode = mode
+        self.args = args
+        self.cfg = cfg
         self.net = net
         self.num_classes = num_classes
         self.image_size = img_size
-        self.priorbox = PriorBox(cfg, net, output_stride)
-        self.priors = self.priorbox.forward()
+        self.priorbox = PriorBox(args, cfg, net, output_stride)
+        self.priors = self.priorbox()
         self.backbone = build_backbone(net, output_stride, pretrained)
         self.aspp = build_aspp(net, output_stride)
         self.decoder = build_decoder(net)
@@ -35,19 +37,19 @@ class DSSD(nn.Module):
                                num_classes=num_classes,
                                num_anchor=cfg.anchor_number)
 
-        # For detect
-        self.softmax = nn.Softmax(dim=-1)
-        self.detect = Detect(cfg, num_classes)
-
         if freeze_bn:
             self.freeze_bn
 
-    def forward(self, input):
+        # For detect
+        self.softmax = nn.Softmax(dim=-1)
+        self.detect = Detect(self.args, self.cfg, self.num_classes).eval()
+
+    def forward(self, input, mode):
         layer1_feat, layer2_feat, layer3_feat, layer4_feat = self.backbone(input)
         layer4_feat = self.aspp(layer4_feat)
         x = self.decoder(layer1_feat, layer2_feat, layer3_feat, layer4_feat)
         loc, conf = self.head(x)
-        if self.mode == 'train':
+        if mode == 'train':
             output = (
                 loc.view(loc.size(0), -1, 4),
                 conf.view(conf.size(0), -1, self.num_classes),
@@ -89,8 +91,16 @@ class DSSD(nn.Module):
 
 
 if __name__ == "__main__":
-    model = DSSD(backbone='resnet', output_stride=32)
+    from utils.config import cfg
+    from utils.hyp import parse_args
+    from torch.autograd import Variable
+    args = parse_args()
+    model = DSSD(args, cfg=cfg)
+    model = model.cuda(0)
+    if args.ng > 1:
+        model = torch.nn.DataParallel(model, device_ids=args.gpu_ids)
+        cudnn.benchmark = True 
     model.eval()
-    input = torch.rand(2, 3, 512, 512)
-    output = model(input)
+    input = torch.rand(4, 3, 512, 512).cuda()
+    output = model(input, 'val')
     pass

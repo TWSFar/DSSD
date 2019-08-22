@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import sys
-sys.path.append('G:\\CV\\Reading\\DSSD')
+sys.path.append('/home/twsf/work/DSSD')
 from utils.box_utils import jaccard
 
 
@@ -82,10 +82,10 @@ if __name__ == "__main__":
     temp = torch.tensor([[1, 1, 4, 4, 0.4, 1],
                          [4, 4, 20, 20, 0.9, 1],
                          [1, 1, 4, 4, 0.7, 2],
-                         [1, 1, 5, 5, 0.8, 2]])
+                         [1, 1, 5, 5, 0.8, 2]]).cuda()
 
     target = torch.tensor([[1, 1, 20, 20, 1.0],
-                           [2, 2, 5, 5, 2.0]])
+                           [2, 2, 5, 5, 2.0]]).cuda()
 
     output = [temp, temp]
     targets = [target, target]

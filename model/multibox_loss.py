@@ -47,8 +47,8 @@ class MultiBoxLoss(nn.Module):
             match(self.threshold, truths, label, defaults, 
                   self.variance, loc_t, conf_t, idx)
 
-        loc_t.to(self.device)
-        conf_t.to(self.device)
+        loc_t = loc_t.to(self.device)
+        conf_t = conf_t.to(self.device)
         pos = conf_t > 0
         num_pos = pos.sum(dim=1, keepdim=True)
 

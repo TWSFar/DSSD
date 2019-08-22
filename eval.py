@@ -1,5 +1,3 @@
-import os
-import os.path as osp
 from tqdm import tqdm
 import numpy as np
 
@@ -41,27 +39,31 @@ class Evaluator(object):
         # initilize the network here.
         self.model = None
         if args.net == 'resnet':
-            model = DSSD(cfg=cfg,
+            model = DSSD(args=args,
+                         cfg=cfg,
                          net=args.net,
                          output_stride=32,
                          num_classes=self.num_classes,
                          img_size=self.cfg.input_size,
-                         pretrained=True,
-                         mode='val')
+                         pretrained=True)
         else:
             NotImplementedError
         if self.args.eval_from is not None:
             model.load_state_dict(torch.load(self.args.eval_from))
             self.model = model.to(self.args.device)
+            if args.ng > 1:
+                self.model = torch.nn.DataParallel(self.model, device_ids=args.gpu_ids)
 
         # Define evalutor
         self.evalutor = MultiBoxEval(self.cfg.input_size, self.cfg.iou_thresh)
+        self.evalutor = self.evalutor.to(self.args.device)
+        if args.ng > 1:
+            self.evalutor = torch.nn.DataParallel(self.evalutor, device_ids=args.gpu_ids)
 
     def validation(self, model=None, epoch=None):
         self.time.total()
         if model is not None:
             self.model = model
-            self.model.mode = 'val'
         assert self.model is not None
         self.model.eval()
 
@@ -72,12 +74,12 @@ class Evaluator(object):
         tbar = tqdm(self.val_loader, desc='\r')
         for ii, (images, targets, _, _) in enumerate(tbar):
             images = images.to(self.args.device)
+            targets = [ann.to(self.args.device) for ann in targets]
             bs = images.shape[0]
             num_img += bs
 
             with torch.no_grad():
-                output = self.model(images)
-
+                output = self.model(images, mode='val')
             stats += self.evalutor(output, targets, bs)
 
         # Compute statistics

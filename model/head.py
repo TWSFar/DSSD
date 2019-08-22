@@ -6,15 +6,17 @@ class head(nn.Module):
     def __init__(self, inplances, num_classes, num_anchor):
         super(head, self).__init__()
 
-        self.loc_layers = []
-        self.conf_layers = []
+        self.loc_layers = nn.ModuleList()
+        self.conf_layers = nn.ModuleList()
         for ii, inplance in enumerate(inplances):
-            self.loc_layers += [nn.Conv2d(inplance,
-                                          num_anchor[ii]*4,
-                                          kernel_size=3, stride=1, padding=1)]
-            self.conf_layers += [nn.Conv2d(inplance,
-                                           num_anchor[ii]*num_classes,
-                                           kernel_size=3, stride=1, padding=1)]
+            self.loc_layers.append(nn.Conv2d(
+                                    inplance, num_anchor[ii]*4,
+                                    kernel_size=3, stride=1,
+                                    padding=1))
+            self.conf_layers.append(nn.Conv2d(
+                                    inplance,
+                                    num_anchor[ii]*num_classes,
+                                    kernel_size=3, stride=1, padding=1))
 
     def forward(self, input):
         loc = list()
@@ -37,11 +39,11 @@ def build_head(inplances=[256, 256, 256, 256],
 
 if __name__ == "__main__":
     input = []
-    input += [torch.rand(1, 256, 64, 64)]
-    input += [torch.rand(1, 256, 32, 32)]
-    input += [torch.rand(1, 256, 16, 16)]
-    input += [torch.rand(1, 256, 16, 16)]
+    input += [torch.rand(1, 256, 64, 64).cuda()]
+    input += [torch.rand(1, 256, 32, 32).cuda()]
+    input += [torch.rand(1, 256, 16, 16).cuda()]
+    input += [torch.rand(1, 256, 16, 16).cuda()]
 
-    model = build_head()
+    model = build_head().cuda()
     output = model(input)
     print(output)

@@ -1,10 +1,14 @@
 import torch
+import torch.nn as nn
 from utils.box_utils import decode
 from model.nms.nms_cpu import nms_cpu
 
 
-class Detect(object):
-    def __init__(self, cfg, num_classes):
+class Detect(nn.Module):
+    def __init__(self, args, cfg, num_classes):
+        super(Detect, self).__init__()
+
+        self.args = args
         self.num_classes = num_classes
 
         # Parameters used in nms
@@ -17,7 +21,7 @@ class Detect(object):
         self.background_label = cfg.bkg_label
         self.variance = cfg.variance
 
-    def __call__(self, loc_data, conf_data, prior_data):
+    def forward(self, loc_data, conf_data, prior_data):
         bs = loc_data.size(0)  # batch size
         num_priors = prior_data.size(0)
         output = [None] * bs
@@ -41,7 +45,7 @@ class Detect(object):
                 keep = nms_cpu(boxes, scores, self.nms_thresh, self.top_k)
                 count = len(keep)
                 if count > 0:
-                    _classes = torch.tensor([[cl*1.0] for _ in range(count)])
+                    _classes = torch.tensor([[cl*1.0] for _ in range(count)]).to(self.args.device)
                     det_max.append(
                         torch.cat((boxes[keep], scores[keep].unsqueeze(1),
                                    _classes), 1))
