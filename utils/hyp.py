@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('--loss-type', type=str, default='ce',
                     choices=['ce', 'focal'],
                     help='loss func type (default: ce)')
-    parser.add_argument('--visdom', default=False, type=bool,
+    parser.add_argument('--visdom', default=True, type=bool,
                     help='Use visdom for loss visualization')
 
     # training hyper params
@@ -54,7 +54,7 @@ def parse_args():
                     help='number of epochs to train (default: auto)')
     parser.add_argument('--start_epoch', type=int, default=0,
                     metavar='N', help='start epochs (default:0)')
-    parser.add_argument('--batch-size', type=int, default=2,
+    parser.add_argument('--batch-size', type=int, default=32,
                     metavar='N', help='input batch size for \
                             training (default: auto)')
     parser.add_argument('--test-batch-size', type=int, default=2,
@@ -64,8 +64,6 @@ def parse_args():
                     help='whether to use balanced weights (default: False)')
 
     # optimizer params
-    parser.add_argument('--lr', type=float, default=None, metavar='LR',
-                    help='learning rate (default: auto)')
     parser.add_argument('--lr-scheduler', type=str, default='poly',
                     choices=['poly', 'step', 'cos'],
                     help='lr scheduler mode: (default: poly)')
@@ -106,7 +104,7 @@ def parse_args():
                     help='evaluate model file path')
     parser.add_argument('--no-val', action='store_true', default=False,
                     help='skip validation during training')
-    parser.add_argument('--eval-batch-size', type=int, default=2,
+    parser.add_argument('--eval-batch-size', type=int, default=32,
                     metavar='N', help='input batch size for \
                             evaluator (default: auto)')
     args = parser.parse_args()
@@ -127,11 +125,11 @@ def parse_args():
     }
         args.epochs = epochs[args.dataset.lower()]
     if args.batch_size is None:
-        args.batch_size = max(4 * args.ng, 1)
+        args.batch_size = max(4 * args.ng, 32)
 
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size
-    
+
     if args.eval_batch_size is None:
         args.eval_batch_size = args.batch_size
 

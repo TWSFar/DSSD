@@ -1,5 +1,6 @@
 import torch
 
+
 def nms_cpu(dets, scores, thresh, top_k=200):
     x1 = dets[:, 0]
     y1 = dets[:, 1]

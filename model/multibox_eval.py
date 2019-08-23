@@ -12,7 +12,7 @@ class MultiBoxEval(nn.Module):
         self.height = input_size
         self.iou_thresh = iou_thresh
 
-    def forward(self, output, labels, bs):
+    def forward(self, output, labels):
         """
         pred is result of after used nms, like:
         ([pred_num, 6],
@@ -23,10 +23,12 @@ class MultiBoxEval(nn.Module):
             ......
          [box_nums, 5]). 5 shape like [box + cls]
         """
+
+        num = len(output)
         stats = []
-        for id in range(bs):
+        for id in range(num):
             targets = labels[id]
-            preds = output[id]
+            preds = output[id, output[id, :, 4].gt(0)]
             num_gt = len(targets)  # number of target
             tcls = targets[:, 4].tolist() if num_gt else []  # target class
 

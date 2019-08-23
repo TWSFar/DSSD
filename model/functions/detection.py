@@ -24,7 +24,7 @@ class Detect(nn.Module):
     def forward(self, loc_data, conf_data, prior_data):
         bs = loc_data.size(0)  # batch size
         num_priors = prior_data.size(0)
-        output = [None] * bs
+        output = torch.zeros(bs, self.num_classes*self.top_k, 6).to(loc_data.device)
         conf_preds = \
             conf_data.view(bs, num_priors, self.num_classes).transpose(2, 1)
 
@@ -45,12 +45,12 @@ class Detect(nn.Module):
                 keep = nms_cpu(boxes, scores, self.nms_thresh, self.top_k)
                 count = len(keep)
                 if count > 0:
-                    _classes = torch.tensor([[cl*1.0] for _ in range(count)]).to(self.args.device)
+                    _classes = torch.tensor([[cl*1.0] for _ in range(count)]).to(loc_data.device)
                     det_max.append(
                         torch.cat((boxes[keep], scores[keep].unsqueeze(1),
                                    _classes), 1))
             if len(det_max):
                 det_max = torch.cat(det_max)
-                output[i] = det_max[det_max[:, 4].argsort(descending=True)]
+                output[i, :len(det_max)] = det_max[det_max[:, 4].argsort(descending=True)]
 
         return output

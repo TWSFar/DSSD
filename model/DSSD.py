@@ -28,8 +28,8 @@ class DSSD(nn.Module):
         self.net = net
         self.num_classes = num_classes
         self.image_size = img_size
-        self.priorbox = PriorBox(args, cfg, net, output_stride)
-        self.priors = self.priorbox()
+        self.priorbox = PriorBox(cfg, net, output_stride)
+        self.priors = self.priorbox().to(args.device)
         self.backbone = build_backbone(net, output_stride, pretrained)
         self.aspp = build_aspp(net, output_stride)
         self.decoder = build_decoder(net)
@@ -42,7 +42,7 @@ class DSSD(nn.Module):
 
         # For detect
         self.softmax = nn.Softmax(dim=-1)
-        self.detect = Detect(self.args, self.cfg, self.num_classes).eval()
+        self.detect = Detect(self.args, self.cfg, self.num_classes)
 
     def forward(self, input, mode):
         layer1_feat, layer2_feat, layer3_feat, layer4_feat = self.backbone(input)
@@ -99,7 +99,6 @@ if __name__ == "__main__":
     model = model.cuda(0)
     if args.ng > 1:
         model = torch.nn.DataParallel(model, device_ids=args.gpu_ids)
-        cudnn.benchmark = True 
     model.eval()
     input = torch.rand(4, 3, 512, 512).cuda()
     output = model(input, 'val')

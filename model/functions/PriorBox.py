@@ -10,9 +10,8 @@ class PriorBox(nn.Module):
     Compute priorbox coordinates in center-offset form for each source
     feature map.
     """
-    def __init__(self, args, cfg, backbone, output_stride):
+    def __init__(self, cfg, backbone, output_stride):
         super(PriorBox, self).__init__()
-        self.args = args
         self.input_size = cfg.input_size
         self.variance = np.array(cfg.variance or [0.1])
         self.feature_maps = np.array(cfg.feature_maps)
@@ -44,7 +43,7 @@ class PriorBox(nn.Module):
                 for w, h in s_k:
                     mean += [cx, cy, w, h]
 
-        output = torch.tensor(mean).view(-1, 4).to(self.args.device)
+        output = torch.tensor(mean).view(-1, 4)
         if self.clip:
             output.clamp_(max=1, min=0)
         return output

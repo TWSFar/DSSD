@@ -23,7 +23,7 @@ class Evaluator(object):
         self.is_best = False
 
         # Define Dataloader
-        val_dataset = Detection_Dataset(args, cfg, 'val', 'val')
+        val_dataset = Detection_Dataset(args, cfg, split=cfg.val_split, mode='val')
         self.num_classes = val_dataset.num_classes
         self.classes = val_dataset.classes
         self.val_loader = data.DataLoader(
@@ -56,9 +56,6 @@ class Evaluator(object):
 
         # Define evalutor
         self.evalutor = MultiBoxEval(self.cfg.input_size, self.cfg.iou_thresh)
-        self.evalutor = self.evalutor.to(self.args.device)
-        if args.ng > 1:
-            self.evalutor = torch.nn.DataParallel(self.evalutor, device_ids=args.gpu_ids)
 
     def validation(self, model=None, epoch=None):
         self.time.total()
@@ -80,7 +77,7 @@ class Evaluator(object):
 
             with torch.no_grad():
                 output = self.model(images, mode='val')
-            stats += self.evalutor(output, targets, bs)
+            stats += self.evalutor(output, targets)
 
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy

@@ -25,6 +25,9 @@ cfg.neg_position = 3
 # encode target
 cfg.encode_targe = False
 
+# Split
+cfg.train_split = 'train'
+cfg.val_split = 'val'
 
 """
 Model options

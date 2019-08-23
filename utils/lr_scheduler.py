@@ -42,4 +42,3 @@ class LR_Scheduler(object):
             optimizer.param_groups[0]['lr'] = lr
             for i in range(1, len(optimizer.param_groups)):
                 optimizer.param_groups[i]['lr'] = lr * 10
-  

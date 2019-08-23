@@ -32,7 +32,7 @@ class Trainer(object):
         self.saver.save_experiment_config()
 
         # Define Dataloader
-        train_dataset = Detection_Dataset(args, cfg, 'train', 'train')
+        train_dataset = Detection_Dataset(args, cfg, cfg.train_split, 'train')
         self.num_classes = train_dataset.num_classes
         self.input_size = train_dataset.input_size
         self.train_loader = data.DataLoader(
@@ -103,13 +103,11 @@ class Trainer(object):
                   .format(args.resume, checkpoint['epoch']))
 
         # Using cuda
-        self.optimizer = self.model.to(self.args.device)
+        # self.optimizer = self.model.to(self.args.device)
         self.model = self.model.to(self.args.device)
         if args.ng > 1 and args.use_multi_gpu:
             self.model = torch.nn.DataParallel(self.model,
                                                device_ids=args.gpu_ids)
-            self.optimizer = torch.nn.DataParallel(self.optimizer,
-                                                   device_ids=args.gpu_ids)
         # Clear start epoch if fine-tuning
         if args.ft:
             self.start_epoch = 0
@@ -133,6 +131,10 @@ class Trainer(object):
         ave_loss_l = 0.
         ave_loss_c = 0.
         for ii, (images, targets, _, _) in enumerate(self.train_loader):
+            num_target = [len(ann) for ann in targets]
+            # continue if exist image no target.
+            if 0 in num_target:
+                continue
             self.time.batch()
             images = images.to(self.args.device)
             targets = [ann.to(self.args.device) for ann in targets]
@@ -147,10 +149,7 @@ class Trainer(object):
             ave_loss_l += (loss_l - ave_loss_l) / (ii + 1)
             assert not torch.isnan(loss), 'WARNING: nan loss detected, ending training'
             loss.backward()
-            if self.args.ng > 1 and self.args.use_multi_gpu:
-                self.optimizer.module.step()
-            else:
-                self.optimizer.step()
+            self.optimizer.step()
 
             # visdom
             if self.args.visdom:
@@ -161,7 +160,7 @@ class Trainer(object):
                 'lr: %5.4g, ' % self.optimizer.param_groups[0]['lr'] +\
                 'loc_loss: %5.3g, conf_loss: %5.3g, time: %5.2gs]' %\
                 (loss_l, loss_c, self.time.batch())
-            if (ii + 1) % 1 == 0:
+            if (ii + 1) % 50 == 0:
                 print(show_info)
 
             # Save log info
@@ -209,8 +208,7 @@ def main():
                 'epoch': epoch,
                 'state_dict': trainer.model.module.state_dict() \
                     if args.ng > 1 and args.use_multi_gpu else trainer.model.state_dict(),
-                'optimizer': trainer.optimizer.module.state_dict() \
-                    if args.ng > 1 and args.use_multi_gpu else trainer.optimizer.state_dict(),
+                'optimizer': trainer.optimizer.state_dict(),
                 'best_pred': evaluator.best_pred,
             }, evaluator.is_best)
 
