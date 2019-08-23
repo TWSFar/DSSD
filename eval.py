@@ -88,10 +88,10 @@ class Evaluator(object):
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
 
         # Print results
-        pf = "[mode: 'val', epoch: [%d], num_img: %6d, " +\
-            "targets: %7d, precision: %3.3g, recall: %3.3g, " +\
-            "mAP: %3.3g, F1: %3.3g]"  # print format
-        print(pf % (epoch, num_img, nt.sum(), mp, mr, map, mf1))
+        pf = "[mode: 'val', epoch: [%d], num_img: %7d, " +\
+            "targets: %7d, precision: %7.3g, recall: %7.3g, " +\
+            "mAP: %7.3g, F1: %7.3g]"  # print format
+        print(pf % (epoch, num_img, nt.sum(), mp, mr, map*100, mf1))
 
         # Print results per class
         _pf = "[mode: 'val', class: %12s, targets: %7d, " +\
@@ -99,8 +99,8 @@ class Evaluator(object):
             "AP: %7.3g, F1: %7.3g]"  # print format
         if self.num_classes > 1 and len(stats):
             for i, c in enumerate(ap_class):
-                print(_pf % (self.classes[c+1], nt[c], p[i],
-                             r[i], ap[i], f1[i]))
+                print(_pf % (self.classes[c], nt[c], p[i],
+                             r[i], ap[i]*100, f1[i]))
 
         # self.new_pred
         self.new_pred = map
@@ -176,7 +176,7 @@ class Evaluator(object):
         # first append sentinel values at the end
 
         mrec = np.concatenate(([0.], recall, [1.]))
-        mpre = np.concatenate(([0.], precision, [1.]))
+        mpre = np.concatenate(([0.], precision, [0.]))
 
         # compute the precision envelope
         for i in range(mpre.size - 1, 0, -1):
