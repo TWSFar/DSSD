@@ -94,7 +94,7 @@ def parse_args():
                     help='set the checkpoint name')
 
     # finetuning pre-trained models
-    parser.add_argument('--ft', action='store_true', default=False,
+    parser.add_argument('--ft', action='store_false', default=True,
                     help='finetuning on a different dataset')
 
     # evaluation option

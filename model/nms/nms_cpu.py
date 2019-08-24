@@ -7,14 +7,14 @@ def nms_cpu(dets, scores, thresh, top_k=200):
     x2 = dets[:, 2]
     y2 = dets[:, 3]
 
-    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    areas = (x2 - x1) * (y2 - y1)
     order = scores.argsort(descending=True)
     order = order[:top_k]
     keep = []
     while order.size(0) > 0:
         i = order[0].item()
         keep.append(i)
-        xx1 = torch.max(x1[i], y1[order[1:]])
+        xx1 = torch.max(x1[i], x1[order[1:]])
         yy1 = torch.max(y1[i], y1[order[1:]])
         xx2 = torch.min(x2[i], x2[order[1:]])
         yy2 = torch.min(y2[i], y2[order[1:]])

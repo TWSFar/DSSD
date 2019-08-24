@@ -39,13 +39,13 @@ cfg.feature_maps = [64, 32, 16, 16]
 cfg.nms_thresh = 0.5
 
 # confidence threshold
-cfg.conf_thresh = 0.1
+cfg.conf_thresh = 0.3
 
 # iou threshold (ap50=0.5)
 cfg.iou_thresh = 0.5
 
 # top k nms
-cfg.top_k = 200
+cfg.top_k = 100
 
 
 """

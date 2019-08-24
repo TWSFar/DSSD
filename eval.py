@@ -58,7 +58,7 @@ class Evaluator(object):
         self.evalutor = MultiBoxEval(self.cfg.input_size, self.cfg.iou_thresh)
 
     def validation(self, model=None, epoch=None):
-        self.time.total()
+        self.time.epoch()
         if model is not None:
             self.model = model
         assert self.model is not None
@@ -79,6 +79,7 @@ class Evaluator(object):
                 output = self.model(images, mode='val')
             stats += self.evalutor(output, targets)
 
+        total_time = self.time.epoch()
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         # number of targets per class
@@ -87,11 +88,12 @@ class Evaluator(object):
             p, r, ap, f1, ap_class = self.ap_per_class(*stats)
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
 
+        map *= 100
         # Print results
         pf = "[mode: 'val', epoch: [%d], num_img: %7d, " +\
             "targets: %7d, precision: %7.3g, recall: %7.3g, " +\
-            "mAP: %7.3g, F1: %7.3g]"  # print format
-        print(pf % (epoch, num_img, nt.sum(), mp, mr, map*100, mf1))
+            "mAP: %7.3g, F1: %7.3g, time: %7.3gm]"  # print format
+        print(pf % (epoch, num_img, nt.sum(), mp, mr, map, mf1, total_time))
 
         # Print results per class
         _pf = "[mode: 'val', class: %12s, targets: %7d, " +\

@@ -10,7 +10,7 @@ try:
 except:
     print('test...')
     import sys
-    sys.path.extend(['G:\\CV\\Reading\\DSSD',])
+    sys.path.extend(['/home/twsf/work/DSSD',])
     from dataloaders.datasets.pascal_voc import pascal_voc
     from dataloaders.custom_transforms import train_transforms, test_transforms, normalize
     from mypath import Path  
@@ -72,7 +72,7 @@ class Detection_Dataset(Dataset):
         boxes = self.roidb[index]['boxes']  # [[x, y, w, h], ...]
         classes = self.roidb[index]['gt_classes']  # [ c, ...]
         target = np.hstack((boxes, np.expand_dims(classes, axis=1))) # [[x, y, w, h, c], ...]
-        
+
         if self.mode == 'train':
             img, target = train_transforms(img, target, self.input_size)
         else:

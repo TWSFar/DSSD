@@ -193,7 +193,7 @@ def main():
         if not args.no_val and epoch % args.validate == (args.validate - 1):
             map, mf1 = evaluator.validation(trainer.model, epoch)
             val_svar_pf = '[mode: val ' +\
-                'mAP: %5.4g, ' % map * 100 +\
+                'mAP: %5.4g, ' % map +\
                 'mF1: %5.4g]' % mf1
             trainer.saver.save_log(val_svar_pf)
             if args.visdom:
