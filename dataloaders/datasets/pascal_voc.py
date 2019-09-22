@@ -89,7 +89,7 @@ class pascal_voc(object):
         filename = os.path.join(self._base_dir, 'Annotations', index + '.xml')
         tree = ET.parse(filename)
         objs = tree.findall('object')
-    
+
         num_objs = len(objs)
 
         boxes = np.zeros((num_objs, 4), dtype=np.float64)
@@ -126,7 +126,7 @@ class pascal_voc(object):
                 'gt_overlaps': overlaps,
                 'flipped': False,
                 'seg_areas': seg_areas}
-    
+
     def _load_image_set_index(self):
         """
         Load the indexes listed in this dataset's image set file.
@@ -141,7 +141,7 @@ class pascal_voc(object):
                 for line in f.readlines():
                     image_index.append(line.strip())
         return image_index
-    
+
     def prepare_roidb(self):
         """
         Enrich the imdb's roidb by adding some derived quantities that
@@ -162,7 +162,7 @@ class pascal_voc(object):
             with open(cache_file, 'wb') as f:
                 pickle.dump(sizes, f)
             print('Done!!')
-                
+
         for i, index in enumerate(self.im_ids):
             self.roidb[i]['img_id'] = self.image_id_at(i)
             self.roidb[i]['image'] = self.image_path_at(index)

@@ -121,7 +121,7 @@ def parse_args():
     if args.epochs is None:
         epochs = {
             'coco': 30,
-            'pascal': 50,
+            'pascal': 100,
     }
         args.epochs = epochs[args.dataset.lower()]
     if args.batch_size is None:

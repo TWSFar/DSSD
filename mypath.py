@@ -4,7 +4,7 @@ class Path(object):
         if dataset == 'pascal':
             return '/home/twsf/data/VOC2012'
         elif dataset == 'coco':
-            return ''
+            return '/home/twsf/data/COCO'
         else:
             print('Dataset {} not available.'.format(dataset))
             raise NotImplementedError

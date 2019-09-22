@@ -26,7 +26,7 @@ cfg.neg_position = 3
 cfg.encode_targe = False
 
 # Split
-cfg.train_split = 'train'
+cfg.train_split = 'train0712'
 cfg.val_split = 'val'
 
 """
@@ -36,16 +36,16 @@ Model options
 cfg.feature_maps = [64, 32, 16, 16]
 
 # nms threshold
-cfg.nms_thresh = 0.5
+cfg.nms_thresh = 0.4
 
 # confidence threshold
-cfg.conf_thresh = 0.3
+cfg.conf_thresh = 0.7
 
 # iou threshold (ap50=0.5)
 cfg.iou_thresh = 0.5
 
 # top k nms
-cfg.top_k = 100
+cfg.top_k = 200
 
 
 """
@@ -56,7 +56,7 @@ cfg.overlap_thresh = 0.5
 cfg.prior_for_matching = True
 
 # Initial learning rate
-cfg.lr = 0.001
+cfg.lr = 0.005
 
 # Momentum
 cfg.momentum = 0.9

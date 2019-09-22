@@ -22,7 +22,12 @@ class Test(object):
         self.time = Timer()
         self.input_size = cfg.input_size
         self.num_classes = 21
-
+        self.class_name = ('__background__',  # always index 0
+                            'aeroplane', 'bicycle', 'bird', 'boat',
+                            'bottle', 'bus', 'car', 'cat', 'chair',
+                            'cow', 'diningtable', 'dog', 'horse',
+                            'motorbike', 'person', 'pottedplant',
+                            'sheep', 'sofa', 'train', 'tvmonitor')
         # Define Network
         # initilize the network here.
         if args.net == 'resnet':
@@ -58,8 +63,11 @@ class Test(object):
             output = self.model(input, mode='test')
 
         output = output.squeeze(0).cpu()
-        output = output[output[:, 4].gt(0), :4]
-        output *= self.input_size
+        output = output[output[:, 4].gt(0)]
+        output[:, :4] *= self.input_size
+        for ii, name in enumerate(self.class_name):
+            print(ii, ':', name, end='. ')
+        print(output)
         # output[:, [0, 2]] = output[:, [0, 2]] / ratio - left
         # output[:, [1, 3]] = output[:, [1, 3]] / ratio - top
         # self.show_image(image, output)
@@ -102,11 +110,17 @@ class Test(object):
 
 
 def main():
+    import os
+    import os.path as osp
     from utils.hyp import parse_args
     args = parse_args()
 
     test = Test(args, '/home/twsf/work/DSSD/work_dirs/pascal/dssd-resnet/model_best.pth.tar')
-    test.test('/home/twsf/work/DSSD/data/VOC2012/JPEGImages/2007_000032.jpg')
+    root = '/home/twsf/data/VOC2012/JPEGImages'
+    img_list = os.listdir(root)
+    for img in img_list:
+        path = osp.join(root, img)
+        test.test(path)
 
 
 if __name__ == "__main__":

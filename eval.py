@@ -49,7 +49,9 @@ class Evaluator(object):
         else:
             NotImplementedError
         if self.args.eval_from is not None:
-            model.load_state_dict(torch.load(self.args.eval_from))
+            checkpoint = torch.load(self.args.eval_from)
+            model.load_state_dict(checkpoint['state_dict'])
+            self.epoch = checkpoint['epoch']
             self.model = model.to(self.args.device)
             if args.ng > 1:
                 self.model = torch.nn.DataParallel(self.model, device_ids=args.gpu_ids)
@@ -61,6 +63,7 @@ class Evaluator(object):
         self.time.epoch()
         if model is not None:
             self.model = model
+            self.epoch = epoch
         assert self.model is not None
         self.model.eval()
 
@@ -89,11 +92,12 @@ class Evaluator(object):
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
 
         map *= 100
+        mf1 *= 100
         # Print results
         pf = "[mode: 'val', epoch: [%d], num_img: %7d, " +\
             "targets: %7d, precision: %7.3g, recall: %7.3g, " +\
             "mAP: %7.3g, F1: %7.3g, time: %7.3gm]"  # print format
-        print(pf % (epoch, num_img, nt.sum(), mp, mr, map, mf1, total_time))
+        print(pf % (self.epoch, num_img, nt.sum(), mp*100, mr*100, map, mf1, total_time))
 
         # Print results per class
         _pf = "[mode: 'val', class: %12s, targets: %7d, " +\
@@ -101,8 +105,8 @@ class Evaluator(object):
             "AP: %7.3g, F1: %7.3g]"  # print format
         if self.num_classes > 1 and len(stats):
             for i, c in enumerate(ap_class):
-                print(_pf % (self.classes[c], nt[c], p[i],
-                             r[i], ap[i]*100, f1[i]))
+                print(_pf % (self.classes[c], nt[c], p[i]*100,
+                             r[i]*100, ap[i]*100, f1[i]*100))
 
         # self.new_pred
         self.new_pred = map
