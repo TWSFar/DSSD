@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import Dataset
 try:
     from dataloaders.datasets.pascal_voc import pascal_voc
+    from dataloaders.datasets.coco import coco
     from dataloaders.custom_transforms import train_transforms, test_transforms, normalize
     from mypath import Path
 except:
@@ -12,6 +13,7 @@ except:
     import sys
     sys.path.extend(['/home/twsf/work/DSSD',])
     from dataloaders.datasets.pascal_voc import pascal_voc
+    from dataloaders.datasets.coco import coco
     from dataloaders.custom_transforms import train_transforms, test_transforms, normalize
     from mypath import Path  
 
@@ -29,9 +31,12 @@ class Detection_Dataset(Dataset):
         base_dir = Path.db_root_dir(args.dataset)
         if args.dataset == 'pascal':
             imdb = pascal_voc(base_dir=base_dir, split=split, mode=mode)
+        elif args.dataset == 'coco':
+            imdb = coco(base_dir=base_dir, split=split, mode=mode)
         else:
             raise NotImplementedError
         self.roidb = imdb.roidb
+        print(self.roidb[0])
         self.classes = imdb._classes
         self.num_classes = imdb.num_classes
         self.num_images = imdb.num_images
@@ -138,13 +143,13 @@ def show_image(img, labels):
 
 if __name__ == "__main__":
     import sys
-    sys.path.extend(['G:\\CV\\Reading\\DSSD',])
+    sys.path.extend(['/home/twsf/work/DSSD/',])
     from utils.config import cfg
     from utils.hyp import parse_args
     import torch.utils.data as data
 
     args = parse_args()
-    dataset = Detection_Dataset(args, cfg, mode='val')
+    dataset = Detection_Dataset(args, cfg, split='train2017', mode='train')
     dataloader = data.DataLoader(dataset, batch_size=3,
                                  num_workers=4, shuffle=True,
                                  pin_memory=True,

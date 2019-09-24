@@ -28,7 +28,7 @@ def parse_args():
                     help='backbone name (default: resnet)')
     parser.add_argument('--output-stride', type=int, default=32,
                     help='network output stride (default: 32)')
-    parser.add_argument('--dataset', type=str, default='pascal',
+    parser.add_argument('--dataset', type=str, default='coco',
                     choices=['pascal', 'coco'],
                     help='dataset name (default: pascal)')
     parser.add_argument('--use-sbd', action='store_true', default=False,
@@ -54,7 +54,7 @@ def parse_args():
                     help='number of epochs to train (default: auto)')
     parser.add_argument('--start_epoch', type=int, default=0,
                     metavar='N', help='start epochs (default:0)')
-    parser.add_argument('--batch-size', type=int, default=32,
+    parser.add_argument('--batch-size', type=int, default=8,
                     metavar='N', help='input batch size for \
                             training (default: auto)')
     parser.add_argument('--test-batch-size', type=int, default=2,

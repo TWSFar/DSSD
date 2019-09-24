@@ -106,6 +106,7 @@ class Trainer(object):
         # self.optimizer = self.model.to(self.args.device)
         self.model = self.model.to(self.args.device)
         if args.ng > 1 and args.use_multi_gpu:
+            print("Using multiple gpu")
             self.model = torch.nn.DataParallel(self.model,
                                                device_ids=args.gpu_ids)
         # Clear start epoch if fine-tuning

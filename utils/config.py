@@ -26,8 +26,8 @@ cfg.neg_position = 3
 cfg.encode_targe = False
 
 # Split
-cfg.train_split = 'train0712'
-cfg.val_split = 'val'
+cfg.train_split = 'train2017'
+cfg.val_split = 'val2017'
 
 """
 Model options
