@@ -44,12 +44,12 @@ class DSSD(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.detect = Detect(self.args, self.cfg, self.num_classes)
 
-    def forward(self, input, mode):
+    def forward(self, input):
         layer1_feat, layer2_feat, layer3_feat, layer4_feat = self.backbone(input)
         layer4_feat = self.aspp(layer4_feat)
         x = self.decoder(layer1_feat, layer2_feat, layer3_feat, layer4_feat)
         loc, conf = self.head(x)
-        if mode == 'train':
+        if self.training:
             output = (
                 loc.view(loc.size(0), -1, 4),
                 conf.view(conf.size(0), -1, self.num_classes),
@@ -101,5 +101,5 @@ if __name__ == "__main__":
         model = torch.nn.DataParallel(model, device_ids=args.gpu_ids)
     model.eval()
     input = torch.rand(4, 3, 512, 512).cuda()
-    output = model(input, 'val')
+    output = model(input)
     pass

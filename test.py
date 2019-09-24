@@ -59,8 +59,7 @@ class Test(object):
         img = torch.from_numpy(img).unsqueeze(0)
         input = img.to(self.args.device)
 
-        with torch.no_grad():
-            output = self.model(input, mode='test')
+        output = self.model(input)
 
         output = output.squeeze(0).cpu()
         output = output[output[:, 4].gt(0)]

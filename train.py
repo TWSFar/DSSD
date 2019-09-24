@@ -142,7 +142,7 @@ class Trainer(object):
             self.scheduler(self.optimizer, ii, epoch, self.best_pred)
             self.optimizer.zero_grad()
 
-            output = self.model(images, mode='train')
+            output = self.model(images)
 
             loss_l, loss_c = self.criterion(output, targets)
             loss = loss_l + loss_c

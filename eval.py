@@ -79,7 +79,7 @@ class Evaluator(object):
             num_img += bs
 
             with torch.no_grad():
-                output = self.model(images, mode='val')
+                output = self.model(images)
             stats += self.evalutor(output, targets)
 
         total_time = self.time.epoch()
