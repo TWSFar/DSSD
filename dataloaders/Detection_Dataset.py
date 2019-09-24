@@ -36,7 +36,6 @@ class Detection_Dataset(Dataset):
         else:
             raise NotImplementedError
         self.roidb = imdb.roidb
-        print(self.roidb[0])
         self.classes = imdb._classes
         self.num_classes = imdb.num_classes
         self.num_images = imdb.num_images

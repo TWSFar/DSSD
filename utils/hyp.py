@@ -54,10 +54,10 @@ def parse_args():
                     help='number of epochs to train (default: auto)')
     parser.add_argument('--start_epoch', type=int, default=0,
                     metavar='N', help='start epochs (default:0)')
-    parser.add_argument('--batch-size', type=int, default=8,
+    parser.add_argument('--batch-size', type=int, default=32,
                     metavar='N', help='input batch size for \
                             training (default: auto)')
-    parser.add_argument('--test-batch-size', type=int, default=2,
+    parser.add_argument('--test-batch-size', type=int, default=32,
                     metavar='N', help='input batch size for \
                             testing (default: auto)')
     parser.add_argument('--use-balanced-weights', action='store_true', default=False,
