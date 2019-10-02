@@ -128,8 +128,8 @@ class coco(object):
             bbox = obj["bbox"]
             # Make pixel indexes 0-based
             x1 = float(bbox[0] - bbox[2] / 2.0)
-            y1 = float(bbox[1] + bbox[3] / 2.0)
-            x2 = float(bbox[0] - bbox[2] / 2.0)
+            y1 = float(bbox[1] - bbox[3] / 2.0)
+            x2 = float(bbox[0] + bbox[2] / 2.0)
             y2 = float(bbox[1] + bbox[3] / 2.0)
 
             cls = self.catid_to_ind[obj["category_id"]]

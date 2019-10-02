@@ -106,6 +106,7 @@ class Trainer(object):
         # self.optimizer = self.model.to(self.args.device)
         self.model = self.model.to(self.args.device)
         if args.ng > 1 and args.use_multi_gpu:
+            print("Using multiple gpu")
             self.model = torch.nn.DataParallel(self.model,
                                                device_ids=args.gpu_ids)
         # Clear start epoch if fine-tuning
@@ -141,7 +142,7 @@ class Trainer(object):
             self.scheduler(self.optimizer, ii, epoch, self.best_pred)
             self.optimizer.zero_grad()
 
-            output = self.model(images, mode='train')
+            output = self.model(images)
 
             loss_l, loss_c = self.criterion(output, targets)
             loss = loss_l + loss_c

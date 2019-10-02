@@ -28,6 +28,10 @@ def nms_cpu(dets, scores, thresh, top_k=200):
         # inds = torch.where(iou <= thresh)[0]
         # order = order[inds + 1]
         order = order[1:][iou <= thresh]
+<<<<<<< HEAD
+=======
+
+>>>>>>> f191482b7740f64828e854d39c3ab2fd8b33da53
     return keep
 
 
