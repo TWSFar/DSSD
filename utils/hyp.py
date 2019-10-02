@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('--loss-type', type=str, default='ce',
                     choices=['ce', 'focal'],
                     help='loss func type (default: ce)')
-    parser.add_argument('--visdom', default=True, type=bool,
+    parser.add_argument('--visdom', default=False, type=bool,
                     help='Use visdom for loss visualization')
 
     # training hyper params
@@ -54,7 +54,7 @@ def parse_args():
                     help='number of epochs to train (default: auto)')
     parser.add_argument('--start_epoch', type=int, default=0,
                     metavar='N', help='start epochs (default:0)')
-    parser.add_argument('--batch-size', type=int, default=32,
+    parser.add_argument('--batch-size', type=int, default=2,
                     metavar='N', help='input batch size for \
                             training (default: auto)')
     parser.add_argument('--test-batch-size', type=int, default=2,
@@ -104,7 +104,7 @@ def parse_args():
                     help='evaluate model file path')
     parser.add_argument('--no-val', action='store_true', default=False,
                     help='skip validation during training')
-    parser.add_argument('--eval-batch-size', type=int, default=32,
+    parser.add_argument('--eval-batch-size', type=int, default=2,
                     metavar='N', help='input batch size for \
                             evaluator (default: auto)')
     args = parser.parse_args()

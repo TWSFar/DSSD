@@ -26,7 +26,7 @@ cfg.neg_position = 3
 cfg.encode_targe = False
 
 # Split
-cfg.train_split = 'train0712'
+cfg.train_split = 'train'
 cfg.val_split = 'val'
 
 """

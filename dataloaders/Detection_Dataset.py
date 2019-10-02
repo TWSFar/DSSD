@@ -69,9 +69,9 @@ class Detection_Dataset(Dataset):
         scrimg_shape = np.array(img.shape[0:2])
         assert img is not None, 'File Not Found ' + self.roidb[index]['image']
 
-        boxes = self.roidb[index]['boxes']  # [[x, y, w, h], ...]
+        boxes = self.roidb[index]['boxes']  # [[x1, y1, x2, y2], ...]
         classes = self.roidb[index]['gt_classes']  # [ c, ...]
-        target = np.hstack((boxes, np.expand_dims(classes, axis=1))) # [[x, y, w, h, c], ...]
+        target = np.hstack((boxes, np.expand_dims(classes, axis=1)))  # [[x, y, w, h, c], ...]
 
         if self.mode == 'train':
             img, target = train_transforms(img, target, self.input_size)
@@ -138,7 +138,7 @@ def show_image(img, labels):
 
 if __name__ == "__main__":
     import sys
-    sys.path.extend(['G:\\CV\\Reading\\DSSD',])
+    sys.path.extend(['/home/twsf/work/DSSD/data/VOC2012',])
     from utils.config import cfg
     from utils.hyp import parse_args
     import torch.utils.data as data

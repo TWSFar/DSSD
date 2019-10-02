@@ -25,9 +25,9 @@ def nms_cpu(dets, scores, thresh, top_k=200):
         inter = w * h
         iou = inter / (areas[i] + areas[order[1:]] - inter + 1e-16)
 
-        inds = torch.where(iou <= thresh)[0]
-        order = order[inds + 1]
-
+        # inds = torch.where(iou <= thresh)[0]
+        # order = order[inds + 1]
+        order = order[1:][iou <= thresh]
     return keep
 
 
@@ -39,4 +39,4 @@ if __name__ == "__main__":
             [11, 11, 21, 21]]).cuda()
     scores = torch.tensor([0.3, 0.2, 0.7, 0.9]).cuda()
     keep = nms_cpu(dets, scores, 0.5, 200)
-    pass
+    pass 

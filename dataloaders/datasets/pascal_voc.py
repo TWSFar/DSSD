@@ -11,14 +11,14 @@ try:
 except:
     print('test...')
     import sys
-    sys.path.extend(['G:\\CV\\Reading\\DSSD',])
+    sys.path.extend(['/home/twsf/work/DSSD', ])
     from mypath import Path
-    
+
 
 class pascal_voc(object):
 
     num_classes = 21
-    
+
     def __init__(self,
                  base_dir=Path.db_root_dir('pascal'),
                  split='train',
